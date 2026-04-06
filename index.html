@@ -6,1544 +6,770 @@
 <title>CS2 MONOPOLY — SITE:CONTROL</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;1,700&family=Share+Tech+Mono&family=Teko:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg: #0c0c0e;
-  --bg2: #111114;
-  --bg3: #16161b;
-  --panel: #13131a;
-  --border: #2a2a3a;
-  --border2: #3a3a50;
-  --text: #e8e8f0;
-  --muted: #666680;
-  --dim: #444460;
-
-  --cs-orange: #f0a500;
-  --cs-yellow: #ffd700;
-  --cs-red: #e84040;
-  --cs-blue: #4090f0;
-  --cs-green: #50c060;
-  --cs-teal: #30c0b0;
-  --cs-purple: #9060e0;
-  --cs-white: #d0d0e0;
-
-  /* Map groups */
-  --dust: #c8a060;
-  --mirage: #4080e0;
-  --inferno: #e85030;
-  --nuke: #50b070;
-  --overpass: #9060d0;
-  --ancient: #d0a040;
-  --vertigo: #40b0c0;
-  --anubis: #e07030;
-
-  --glow-orange: 0 0 20px rgba(240,165,0,0.4);
-  --glow-red: 0 0 20px rgba(232,64,64,0.4);
-}
-
-* { margin:0; padding:0; box-sizing:border-box; }
-html, body { height:100%; }
-
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'Barlow Condensed', sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
-}
-
-/* Scanlines */
-body::after {
-  content:'';
-  position:fixed; inset:0;
-  background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px);
-  pointer-events:none; z-index:9998;
-}
-
-/* ─── SCREENS ─── */
-.screen { display:none; min-height:100vh; }
-.screen.active { display:flex; flex-direction:column; }
-
-/* ════════════════════════════════
-   HOME SCREEN
-════════════════════════════════ */
-#home {
-  background:
-    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(240,165,0,0.12) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 90% 90%, rgba(72,144,240,0.08) 0%, transparent 50%),
-    var(--bg);
-  align-items:center; justify-content:center;
-  text-align:center; padding:40px 20px;
-}
-
-.ct-badge {
-  display:inline-flex; align-items:center; gap:8px;
-  font-family:'Share Tech Mono', monospace;
-  font-size:0.7rem; letter-spacing:3px; text-transform:uppercase;
-  color: var(--cs-orange); padding:6px 16px;
-  border:1px solid rgba(240,165,0,0.3); border-radius:2px;
-  margin-bottom:28px;
-}
-.ct-badge::before { content:''; width:6px; height:6px; background:var(--cs-orange); border-radius:50%; animation:blink 1.2s infinite; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
-
-.home-title {
-  font-family:'Teko', sans-serif;
-  font-size: clamp(3rem, 10vw, 7rem);
-  font-weight:700; line-height:0.9;
-  letter-spacing:-1px;
-  margin-bottom:10px;
-}
-.home-title .t1 { display:block; color:var(--text); }
-.home-title .t2 {
-  display:block;
-  color: var(--cs-orange);
-  text-shadow: var(--glow-orange);
-}
-.home-title .t3 { display:block; color:var(--muted); font-size:0.4em; letter-spacing:6px; font-family:'Share Tech Mono',monospace; }
-
-.home-sub {
-  font-size:1.15rem; color:var(--muted); max-width:480px;
-  margin:20px auto 36px; line-height:1.6; font-weight:400;
-}
-
-.home-maps {
-  display:flex; flex-wrap:wrap; justify-content:center; gap:8px;
-  margin-bottom:40px;
-}
-.map-chip {
-  padding:4px 14px; font-size:0.78rem; font-weight:700;
-  letter-spacing:1px; border-radius:2px; border:1px solid;
-  text-transform:uppercase; font-family:'Share Tech Mono',monospace;
-}
-.mc-dust   { color:var(--dust);    border-color:var(--dust);    background:rgba(200,160,96,0.1);  }
-.mc-mirage { color:var(--mirage);  border-color:var(--mirage);  background:rgba(64,128,224,0.1);  }
-.mc-inferno{ color:var(--inferno); border-color:var(--inferno); background:rgba(232,80,48,0.1);   }
-.mc-nuke   { color:var(--nuke);    border-color:var(--nuke);    background:rgba(80,176,112,0.1);  }
-.mc-over   { color:var(--overpass);border-color:var(--overpass);background:rgba(144,96,208,0.1); }
-.mc-anc    { color:var(--ancient); border-color:var(--ancient); background:rgba(208,160,64,0.1);  }
-
-.cta-row { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
-.btn {
-  font-family:'Teko', sans-serif; font-size:1.2rem; font-weight:600;
-  letter-spacing:2px; padding:12px 32px; border-radius:2px;
-  cursor:pointer; text-transform:uppercase; transition:all 0.15s;
-  border:2px solid;
-}
-.btn-primary {
-  background:var(--cs-orange); color:#0c0c0e;
-  border-color:var(--cs-orange);
-  box-shadow: var(--glow-orange);
-}
-.btn-primary:hover { background:#fff; border-color:#fff; box-shadow:0 0 30px rgba(255,255,255,0.3); }
-.btn-ghost {
-  background:transparent; color:var(--muted);
-  border-color:var(--border2);
-}
-.btn-ghost:hover { border-color:var(--cs-orange); color:var(--cs-orange); }
-
-.home-features {
-  display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:12px; margin-top:56px; max-width:860px; width:100%;
-}
-.feat-card {
-  background:var(--panel); border:1px solid var(--border);
-  border-radius:4px; padding:18px; text-align:left;
-  transition:border-color 0.2s;
-}
-.feat-card:hover { border-color:var(--cs-orange); }
-.feat-icon { font-size:1.6rem; margin-bottom:8px; }
-.feat-card h3 { font-size:1rem; font-weight:700; color:var(--text); margin-bottom:4px; letter-spacing:1px; }
-.feat-card p { font-size:0.82rem; color:var(--muted); line-height:1.5; font-family:'Barlow Condensed'; font-weight:400; }
-
-/* ════════════════════════════════
-   LOBBY SCREEN
-════════════════════════════════ */
-#lobby {
-  background: var(--bg);
-  align-items:center; justify-content:center;
-  padding:40px 20px;
-}
-.lobby-card {
-  background:var(--panel); border:1px solid var(--border);
-  border-radius:6px; padding:36px; width:100%; max-width:480px;
-}
-.lobby-card h2 {
-  font-family:'Teko',sans-serif; font-size:2rem;
-  color:var(--cs-orange); letter-spacing:2px; margin-bottom:4px;
-}
-.lobby-card .sub { font-size:0.85rem; color:var(--muted); margin-bottom:28px; font-family:'Share Tech Mono',monospace; }
-
-.fg { margin-bottom:18px; }
-.fg label { display:block; font-size:0.7rem; letter-spacing:2px; color:var(--muted); margin-bottom:6px; text-transform:uppercase; font-family:'Share Tech Mono',monospace; }
-.fg input, .fg select {
-  width:100%; padding:10px 14px;
-  background:var(--bg3); border:1px solid var(--border);
-  border-radius:3px; color:var(--text);
-  font-family:'Barlow Condensed',sans-serif; font-size:1rem; font-weight:600;
-  outline:none; transition:border-color 0.2s;
-}
-.fg input:focus, .fg select:focus { border-color:var(--cs-orange); }
-.fg select option { background:var(--bg3); }
-
-.avatar-grid { display:flex; gap:8px; flex-wrap:wrap; }
-.av-btn {
-  width:46px; height:46px; border-radius:4px;
-  border:2px solid var(--border); background:var(--bg3);
-  cursor:pointer; font-size:1.3rem;
-  display:flex; align-items:center; justify-content:center;
-  transition:all 0.15s;
-}
-.av-btn:hover { border-color:var(--cs-orange); }
-.av-btn.sel { border-color:var(--cs-orange); background:rgba(240,165,0,0.15); box-shadow:var(--glow-orange); }
-
-.sep { height:1px; background:var(--border); margin:22px 0; }
-
-.player-slots { display:flex; flex-direction:column; gap:8px; margin-bottom:20px; }
-.pslot {
-  display:flex; align-items:center; gap:10px;
-  padding:10px 14px; border-radius:4px;
-  background:var(--bg3); border:1px solid var(--border);
-}
-.pslot-av { font-size:1.2rem; }
-.pslot-name { flex:1; font-size:1rem; font-weight:700; }
-.pslot-tag {
-  font-size:0.65rem; padding:2px 8px; border-radius:2px;
-  font-family:'Share Tech Mono',monospace; letter-spacing:1px;
-}
-.tag-you { background:rgba(240,165,0,0.15); color:var(--cs-orange); }
-.tag-bot { background:rgba(72,144,240,0.15); color:var(--cs-blue); }
-
-/* ════════════════════════════════
-   GAME SCREEN
-════════════════════════════════ */
-#game {
-  padding:0;
-  background:var(--bg2);
-}
-
-.game-wrap {
-  display:grid;
-  grid-template-columns: 200px 1fr 260px;
-  min-height:100vh;
-  width:100%;
-}
-
-/* ── LEFT PANEL ── */
-.lp {
-  background:var(--panel);
-  border-right:1px solid var(--border);
-  padding:12px;
-  display:flex; flex-direction:column; gap:10px;
-  overflow-y:auto;
-}
-.lp-title {
-  font-family:'Share Tech Mono',monospace;
-  font-size:0.6rem; letter-spacing:2px; color:var(--muted);
-  text-transform:uppercase; padding-bottom:6px;
-  border-bottom:1px solid var(--border); margin-bottom:4px;
-}
-.pcard {
-  padding:10px; border-radius:4px;
-  background:var(--bg3); border:1px solid var(--border);
-  transition:border-color 0.3s, box-shadow 0.3s;
-}
-.pcard.cur { border-color:var(--cs-orange); box-shadow:var(--glow-orange); }
-.pcard.bust { opacity:0.35; }
-.pc-row1 { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
-.pc-av { font-size:1.3rem; }
-.pc-info { flex:1; min-width:0; }
-.pc-nm { font-size:0.95rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.pc-type { font-size:0.6rem; color:var(--muted); font-family:'Share Tech Mono',monospace; }
-.pc-cash {
-  font-family:'Share Tech Mono',monospace;
-  font-size:1rem; font-weight:700; color:var(--cs-green);
-  letter-spacing:1px;
-}
-.pc-pos { font-size:0.7rem; color:var(--muted); margin-top:2px; }
-.pc-dots { display:flex; flex-wrap:wrap; gap:2px; margin-top:6px; }
-.pd { width:8px; height:8px; border-radius:1px; }
-
-/* ── BOARD AREA ── */
-.ba {
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  padding:16px; overflow:auto;
-}
-
-.board-wrap {
-  position:relative;
-  width: min(calc(100vw - 480px), 620px);
-  aspect-ratio:1;
-  min-width:300px;
-}
-
-.board {
-  width:100%; height:100%;
-  display:grid;
-  grid-template-columns: 72px repeat(9, 1fr) 72px;
-  grid-template-rows:    72px repeat(9, 1fr) 72px;
-  background:#0a0a0d;
-  border:2px solid var(--border2);
-  border-radius:3px;
-  box-shadow: 0 0 80px rgba(0,0,0,0.9), 0 0 40px rgba(240,165,0,0.05);
-  font-size:clamp(4.5px, 0.72vw, 8px);
-}
-
-/* corners */
-.corner {
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  background:#111118; border:1px solid var(--border);
-  cursor:pointer; gap:2px;
-  transition:background 0.2s;
-}
-.corner:hover { background:#1a1a24; }
-.corner-icon { font-size:1.8em; }
-.corner-label { font-family:'Share Tech Mono',monospace; font-size:0.75em; color:var(--muted); text-align:center; letter-spacing:1px; line-height:1.2; }
-
-/* property cells */
-.cell {
-  display:flex; flex-direction:column;
-  border:1px solid #1a1a28;
-  cursor:pointer; position:relative;
-  overflow:hidden; transition:background 0.15s;
-}
-.cell:hover { z-index:2; }
-.cell-color-bar { flex-shrink:0; }
-/* bottom row: bar on top */
-.cell.bottom .cell-color-bar { order:-1; height:5px; width:100%; }
-/* top row: bar on bottom */
-.cell.top .cell-color-bar { order:1; height:5px; width:100%; }
-/* left col: bar on right */
-.cell.left .cell-color-bar { order:1; width:5px; height:100%; position:absolute; right:0; top:0; }
-/* right col: bar on left */
-.cell.right .cell-color-bar { order:-1; width:5px; height:100%; position:absolute; left:0; top:0; }
-
-.cell-body {
-  flex:1; display:flex; flex-direction:column;
-  align-items:center; justify-content:center;
-  padding:2px; text-align:center; gap:1px;
-}
-.cell.left .cell-body, .cell.right .cell-body {
-  writing-mode:vertical-rl;
-}
-.cell-icon { font-size:1.5em; line-height:1; }
-.cell-name { font-size:0.85em; font-weight:700; color:var(--text); line-height:1.1; letter-spacing:0.5px; }
-.cell-price { font-size:0.75em; color:var(--cs-orange); font-family:'Share Tech Mono',monospace; }
-.cell-rent  { font-size:0.7em;  color:var(--muted); font-family:'Share Tech Mono',monospace; }
-
-/* special cells */
-.cell.special { background:#111118; }
-.cell.special .cell-body { justify-content:center; }
-.cell.tax { background:#1a0a0a; }
-.cell.chance { background:#0a0f1a; }
-.cell.community { background:#0a1a0a; }
-
-/* houses */
-.cell-houses { display:flex; gap:1px; flex-wrap:wrap; justify-content:center; margin-top:1px; }
-.house-dot { width:4px; height:4px; border-radius:1px; background:var(--cs-green); }
-.hotel-dot { width:6px; height:4px; border-radius:1px; background:var(--cs-red); }
-
-/* owned overlay */
-.cell-owned-bar {
-  position:absolute; bottom:0; left:0; right:0;
-  height:3px; opacity:0.8;
-}
-
-/* board center */
-.board-center {
-  grid-column:2/11; grid-row:2/11;
-  display:flex; flex-direction:column;
-  align-items:center; justify-content:center; gap:6px;
-  background:radial-gradient(ellipse at center, rgba(240,165,0,0.03) 0%, transparent 65%);
-}
-.bc-logo {
-  font-family:'Teko',sans-serif;
-  font-size:clamp(16px,2.2vw,28px); font-weight:700;
-  color:var(--cs-orange); letter-spacing:3px;
-  text-shadow:var(--glow-orange);
-}
-.bc-sub {
-  font-family:'Share Tech Mono',monospace;
-  font-size:clamp(6px,0.7vw,9px); color:var(--muted);
-  letter-spacing:2px; text-transform:uppercase;
-}
-.dice-wrap { display:flex; flex-direction:column; align-items:center; gap:6px; margin-top:6px; }
-.dice-row { display:flex; gap:6px; }
-.die {
-  width:clamp(22px,2.8vw,34px); height:clamp(22px,2.8vw,34px);
-  background:var(--bg3); border:1px solid var(--border2);
-  border-radius:3px; display:flex; align-items:center; justify-content:center;
-  font-size:clamp(12px,1.6vw,20px); transition:transform 0.2s;
-  font-family:'Share Tech Mono',monospace; color:var(--cs-orange);
-}
-.die.rolling { animation:roll 0.4s ease; }
-@keyframes roll { 0%{transform:rotate(0) scale(1)} 50%{transform:rotate(180deg) scale(1.2)} 100%{transform:rotate(360deg) scale(1)} }
-
-.roll-btn {
-  font-family:'Teko',sans-serif; font-size:clamp(9px,1.1vw,13px);
-  font-weight:600; letter-spacing:2px;
-  padding:clamp(5px,0.7vw,8px) clamp(12px,1.5vw,20px);
-  background:var(--cs-orange); color:#0c0c0e;
-  border:none; border-radius:2px; cursor:pointer;
-  text-transform:uppercase; transition:all 0.15s;
-  box-shadow: var(--glow-orange);
-}
-.roll-btn:hover:not(:disabled) { background:#fff; }
-.roll-btn:disabled { background:var(--border); color:var(--muted); cursor:not-allowed; box-shadow:none; }
-
-/* tokens on board */
-.token {
-  position:absolute;
-  font-size:clamp(8px,1.1vw,14px);
-  pointer-events:none;
-  z-index:10;
-  transition:all 0.5s cubic-bezier(0.4,0,0.2,1);
-  filter:drop-shadow(0 0 4px rgba(240,165,0,0.8));
-}
-
-/* ── RIGHT PANEL ── */
-.rp {
-  background:var(--panel);
-  border-left:1px solid var(--border);
-  display:flex; flex-direction:column;
-  overflow:hidden;
-}
-.rp-tabs {
-  display:flex; border-bottom:1px solid var(--border);
-  flex-shrink:0;
-}
-.rp-tab {
-  flex:1; padding:10px 6px;
-  font-family:'Teko',sans-serif; font-size:0.85rem;
-  font-weight:600; letter-spacing:1px; text-transform:uppercase;
-  background:transparent; border:none; color:var(--muted);
-  cursor:pointer; transition:all 0.15s;
-  border-bottom:2px solid transparent; margin-bottom:-1px;
-}
-.rp-tab:hover { color:var(--text); }
-.rp-tab.act { color:var(--cs-orange); border-bottom-color:var(--cs-orange); }
-
-.rp-body { flex:1; overflow-y:auto; padding:12px; display:none; flex-direction:column; gap:8px; }
-.rp-body.act { display:flex; }
-
-/* Log */
-.log-entry {
-  padding:7px 10px; border-radius:3px;
-  background:var(--bg3); border:1px solid var(--border);
-  font-size:0.82rem; line-height:1.4;
-  border-left:3px solid var(--border2);
-}
-.log-entry.le-move  { border-left-color:var(--cs-blue); }
-.log-entry.le-buy   { border-left-color:var(--cs-green); }
-.log-entry.le-rent  { border-left-color:var(--cs-red); }
-.log-entry.le-tax   { border-left-color:var(--cs-orange); }
-.log-entry.le-card  { border-left-color:var(--cs-purple); }
-.log-entry.le-sys   { border-left-color:var(--dim); }
-.log-time { font-family:'Share Tech Mono',monospace; font-size:0.65rem; color:var(--muted); margin-bottom:2px; }
-
-/* Properties tab */
-.prop-group { margin-bottom:12px; }
-.prop-group-title {
-  font-size:0.65rem; letter-spacing:2px; color:var(--muted);
-  font-family:'Share Tech Mono',monospace; text-transform:uppercase;
-  margin-bottom:6px;
-  display:flex; align-items:center; gap:6px;
-}
-.prop-group-title::before { content:''; width:8px; height:8px; border-radius:1px; }
-.prop-item {
-  display:flex; align-items:center; gap:8px;
-  padding:7px 10px; border-radius:3px;
-  background:var(--bg3); border:1px solid var(--border);
-  margin-bottom:4px; font-size:0.82rem;
-}
-.pi-color { width:8px; height:24px; border-radius:1px; flex-shrink:0; }
-.pi-name { flex:1; font-weight:700; }
-.pi-owner { font-size:0.7rem; color:var(--muted); }
-.pi-houses { font-size:0.65rem; color:var(--cs-green); font-family:'Share Tech Mono',monospace; }
-
-/* Action modal */
-.modal-overlay {
-  display:none; position:fixed; inset:0;
-  background:rgba(0,0,0,0.75); z-index:1000;
-  align-items:center; justify-content:center;
-  padding:20px;
-}
-.modal-overlay.open { display:flex; }
-.modal {
-  background:var(--panel); border:1px solid var(--border2);
-  border-radius:6px; padding:28px; width:100%; max-width:400px;
-  box-shadow: 0 0 60px rgba(0,0,0,0.8), 0 0 30px rgba(240,165,0,0.1);
-}
-.modal h3 {
-  font-family:'Teko',sans-serif; font-size:1.8rem;
-  color:var(--cs-orange); letter-spacing:2px; margin-bottom:4px;
-}
-.modal .m-sub { font-size:0.85rem; color:var(--muted); margin-bottom:18px; font-family:'Share Tech Mono',monospace; }
-.modal .m-price { font-size:1.1rem; color:var(--cs-yellow); font-family:'Share Tech Mono',monospace; margin-bottom:8px; font-weight:700; }
-.modal .m-rent  { font-size:0.82rem; color:var(--muted); margin-bottom:20px; line-height:1.7; }
-.modal-btns { display:flex; gap:10px; }
-.modal-btns button {
-  flex:1; font-family:'Teko',sans-serif; font-size:1.1rem;
-  font-weight:600; letter-spacing:2px;
-  padding:10px; border-radius:3px; cursor:pointer;
-  text-transform:uppercase; transition:all 0.15s;
-}
-.mbtn-buy {
-  background:var(--cs-orange); color:#0c0c0e;
-  border:2px solid var(--cs-orange);
-}
-.mbtn-buy:hover { background:#fff; border-color:#fff; }
-.mbtn-pass {
-  background:transparent; color:var(--muted);
-  border:2px solid var(--border2);
-}
-.mbtn-pass:hover { border-color:var(--cs-red); color:var(--cs-red); }
-.mbtn-ok {
-  background:var(--cs-blue); color:#fff;
-  border:2px solid var(--cs-blue);
-}
-.mbtn-ok:hover { background:#6ab0ff; }
-
-.color-swatch {
-  width:100%; height:5px; border-radius:2px; margin-bottom:14px;
-}
-
-/* Status bar */
-.status-bar {
-  background:var(--bg3); border-top:1px solid var(--border);
-  padding:8px 16px; display:flex; align-items:center; gap:16px;
-  font-family:'Share Tech Mono',monospace; font-size:0.7rem; color:var(--muted);
-  flex-shrink:0;
-}
-.status-dot { width:6px; height:6px; border-radius:50%; background:var(--cs-green); animation:blink 1.2s infinite; flex-shrink:0; }
-.status-turn { color:var(--cs-orange); font-weight:700; }
-
-/* Build btn */
-.build-btn {
-  display:none; width:100%;
-  font-family:'Teko',sans-serif; font-size:1rem; font-weight:600;
-  letter-spacing:2px; padding:8px;
-  background:transparent; color:var(--cs-green);
-  border:1px solid var(--cs-green); border-radius:3px;
-  cursor:pointer; text-transform:uppercase;
-  transition:all 0.15s; margin-top:4px;
-}
-.build-btn:hover { background:rgba(80,192,96,0.15); }
-
-/* Bankruptcy screen overlay */
-.bankrupt-overlay {
-  display:none; position:fixed; inset:0;
-  background:rgba(0,0,0,0.9); z-index:2000;
-  align-items:center; justify-content:center; flex-direction:column;
-  gap:16px; text-align:center;
-}
-.bankrupt-overlay.open { display:flex; }
-.bankrupt-title {
-  font-family:'Teko',sans-serif; font-size:5rem;
-  color:var(--cs-red); letter-spacing:4px;
-  text-shadow:var(--glow-red);
-}
-.win-title {
-  font-family:'Teko',sans-serif; font-size:4rem;
-  color:var(--cs-orange); letter-spacing:4px;
-  text-shadow:var(--glow-orange);
-}
-
-/* Scrollbar */
-::-webkit-scrollbar { width:4px; }
-::-webkit-scrollbar-track { background:var(--bg3); }
-::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+:root{--bg:#0c0c0e;--bg2:#111114;--bg3:#16161b;--panel:#13131a;--border:#2a2a3a;--border2:#3a3a50;--text:#e8e8f0;--muted:#666680;--dim:#444460;--cs-orange:#f0a500;--cs-yellow:#ffd700;--cs-red:#e84040;--cs-blue:#4090f0;--cs-green:#50c060;--cs-teal:#30c0b0;--cs-purple:#9060e0;--dust:#c8a060;--mirage:#4080e0;--inferno:#e85030;--nuke:#50b070;--overpass:#9060d0;--ancient:#d0a040;--vertigo:#40b0c0;--anubis:#e07030;--glow-o:0 0 20px rgba(240,165,0,0.4);--glow-r:0 0 20px rgba(232,64,64,0.4);}
+*{margin:0;padding:0;box-sizing:border-box;}html,body{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:'Barlow Condensed',sans-serif;min-height:100vh;overflow-x:hidden;}
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.04) 3px,rgba(0,0,0,0.04) 4px);pointer-events:none;z-index:9998;}
+.screen{display:none;min-height:100vh;}.screen.active{display:flex;flex-direction:column;}
+/* HOME */
+#home{background:radial-gradient(ellipse 80% 50% at 50% -10%,rgba(240,165,0,0.12) 0%,transparent 60%),radial-gradient(ellipse 60% 40% at 90% 90%,rgba(72,144,240,0.08) 0%,transparent 50%),var(--bg);align-items:center;justify-content:center;text-align:center;padding:40px 20px;}
+.ct-badge{display:inline-flex;align-items:center;gap:8px;font-family:'Share Tech Mono',monospace;font-size:0.7rem;letter-spacing:3px;text-transform:uppercase;color:var(--cs-orange);padding:6px 16px;border:1px solid rgba(240,165,0,0.3);border-radius:2px;margin-bottom:28px;}
+.ct-badge::before{content:'';width:6px;height:6px;background:var(--cs-orange);border-radius:50%;animation:blink 1.2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.home-title{font-family:'Teko',sans-serif;font-size:clamp(3rem,10vw,7rem);font-weight:700;line-height:0.9;letter-spacing:-1px;margin-bottom:10px;}
+.home-title .t1{display:block;color:var(--text);}.home-title .t2{display:block;color:var(--cs-orange);text-shadow:var(--glow-o);}.home-title .t3{display:block;color:var(--muted);font-size:0.4em;letter-spacing:6px;font-family:'Share Tech Mono',monospace;}
+.home-sub{font-size:1.15rem;color:var(--muted);max-width:480px;margin:20px auto 36px;line-height:1.6;}
+.home-maps{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:40px;}
+.map-chip{padding:4px 14px;font-size:0.78rem;font-weight:700;letter-spacing:1px;border-radius:2px;border:1px solid;text-transform:uppercase;font-family:'Share Tech Mono',monospace;}
+.mc-dust{color:var(--dust);border-color:var(--dust);background:rgba(200,160,96,0.1);}.mc-mirage{color:var(--mirage);border-color:var(--mirage);background:rgba(64,128,224,0.1);}.mc-inferno{color:var(--inferno);border-color:var(--inferno);background:rgba(232,80,48,0.1);}.mc-nuke{color:var(--nuke);border-color:var(--nuke);background:rgba(80,176,112,0.1);}.mc-over{color:var(--overpass);border-color:var(--overpass);background:rgba(144,96,208,0.1);}.mc-anc{color:var(--ancient);border-color:var(--ancient);background:rgba(208,160,64,0.1);}
+.cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.btn{font-family:'Teko',sans-serif;font-size:1.2rem;font-weight:600;letter-spacing:2px;padding:12px 32px;border-radius:2px;cursor:pointer;text-transform:uppercase;transition:all 0.15s;border:2px solid;}
+.btn-primary{background:var(--cs-orange);color:#0c0c0e;border-color:var(--cs-orange);box-shadow:var(--glow-o);}.btn-primary:hover{background:#fff;border-color:#fff;}
+.btn-ghost{background:transparent;color:var(--muted);border-color:var(--border2);}.btn-ghost:hover{border-color:var(--cs-orange);color:var(--cs-orange);}
+.home-features{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:56px;max-width:860px;width:100%;}
+.feat-card{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:18px;text-align:left;transition:border-color 0.2s;}.feat-card:hover{border-color:var(--cs-orange);}
+.feat-icon{font-size:1.6rem;margin-bottom:8px;}.feat-card h3{font-size:1rem;font-weight:700;color:var(--text);margin-bottom:4px;letter-spacing:1px;}.feat-card p{font-size:0.82rem;color:var(--muted);line-height:1.5;}
+/* LOBBY */
+#lobby{background:var(--bg);align-items:center;justify-content:center;padding:40px 20px;}
+.lobby-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:36px;width:100%;max-width:480px;}
+.lobby-card h2{font-family:'Teko',sans-serif;font-size:2rem;color:var(--cs-orange);letter-spacing:2px;margin-bottom:4px;}
+.lobby-card .sub{font-size:0.85rem;color:var(--muted);margin-bottom:28px;font-family:'Share Tech Mono',monospace;}
+.fg{margin-bottom:18px;}.fg label{display:block;font-size:0.7rem;letter-spacing:2px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;font-family:'Share Tech Mono',monospace;}
+.fg input,.fg select{width:100%;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:3px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1rem;font-weight:600;outline:none;transition:border-color 0.2s;}.fg input:focus,.fg select:focus{border-color:var(--cs-orange);}.fg select option{background:var(--bg3);}
+.avatar-grid{display:flex;gap:8px;flex-wrap:wrap;}
+.av-btn{width:46px;height:46px;border-radius:4px;border:2px solid var(--border);background:var(--bg3);cursor:pointer;font-size:1.3rem;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}.av-btn:hover{border-color:var(--cs-orange);}.av-btn.sel{border-color:var(--cs-orange);background:rgba(240,165,0,0.15);box-shadow:var(--glow-o);}
+.sep{height:1px;background:var(--border);margin:22px 0;}
+.player-slots{display:flex;flex-direction:column;gap:8px;margin-bottom:20px;}
+.pslot{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:4px;background:var(--bg3);border:1px solid var(--border);}.pslot-av{font-size:1.2rem;}.pslot-name{flex:1;font-size:1rem;font-weight:700;}
+.pslot-tag{font-size:0.65rem;padding:2px 8px;border-radius:2px;font-family:'Share Tech Mono',monospace;letter-spacing:1px;}.tag-you{background:rgba(240,165,0,0.15);color:var(--cs-orange);}.tag-bot{background:rgba(72,144,240,0.15);color:var(--cs-blue);}
+/* GAME */
+#game{padding:0;background:var(--bg2);}
+.game-wrap{display:grid;grid-template-columns:200px 1fr 280px;min-height:100vh;width:100%;}
+.lp{background:var(--panel);border-right:1px solid var(--border);padding:12px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;}
+.lp-title{font-family:'Share Tech Mono',monospace;font-size:0.6rem;letter-spacing:2px;color:var(--muted);text-transform:uppercase;padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:4px;}
+.pcard{padding:10px;border-radius:4px;background:var(--bg3);border:1px solid var(--border);transition:border-color 0.3s,box-shadow 0.3s;}.pcard.cur{border-color:var(--cs-orange);box-shadow:var(--glow-o);}.pcard.bust{opacity:0.35;}
+.pc-row1{display:flex;align-items:center;gap:8px;margin-bottom:6px;}.pc-av{font-size:1.3rem;}.pc-info{flex:1;min-width:0;}.pc-nm{font-size:0.95rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}.pc-type{font-size:0.6rem;color:var(--muted);font-family:'Share Tech Mono',monospace;}
+.pc-cash{font-family:'Share Tech Mono',monospace;font-size:1rem;font-weight:700;color:var(--cs-green);}.pc-pos{font-size:0.7rem;color:var(--muted);margin-top:2px;}.pc-jail{font-size:0.65rem;color:var(--cs-red);font-family:'Share Tech Mono',monospace;margin-top:2px;}
+.pc-dots{display:flex;flex-wrap:wrap;gap:2px;margin-top:6px;}.pd{width:8px;height:8px;border-radius:1px;}
+.action-btns{display:flex;flex-direction:column;gap:6px;margin-top:4px;}
+.act-btn{font-family:'Teko',sans-serif;font-size:0.85rem;font-weight:600;letter-spacing:1px;padding:7px 10px;border-radius:3px;cursor:pointer;text-transform:uppercase;transition:all 0.15s;border:1px solid;width:100%;}
+.ab-green{background:transparent;color:var(--cs-green);border-color:var(--cs-green);}.ab-green:hover{background:rgba(80,192,96,0.15);}
+.ab-blue{background:transparent;color:var(--cs-blue);border-color:var(--cs-blue);}.ab-blue:hover{background:rgba(64,144,240,0.15);}
+.ab-orange{background:transparent;color:var(--cs-orange);border-color:var(--cs-orange);}.ab-orange:hover{background:rgba(240,165,0,0.15);}
+.ab-yellow{background:transparent;color:var(--cs-yellow);border-color:var(--cs-yellow);}.ab-yellow:hover{background:rgba(255,215,0,0.15);}
+.ab-teal{background:transparent;color:var(--cs-teal);border-color:var(--cs-teal);}.ab-teal:hover{background:rgba(48,192,176,0.15);}
+/* BOARD */
+.ba{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;overflow:auto;}
+.board-wrap{position:relative;width:min(calc(100vw - 500px),620px);aspect-ratio:1;min-width:300px;}
+.board{width:100%;height:100%;display:grid;grid-template-columns:72px repeat(9,1fr) 72px;grid-template-rows:72px repeat(9,1fr) 72px;background:#0a0a0d;border:2px solid var(--border2);border-radius:3px;box-shadow:0 0 80px rgba(0,0,0,0.9),0 0 40px rgba(240,165,0,0.05);font-size:clamp(4px,0.7vw,8px);position:relative;}
+.corner{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#111118;border:1px solid var(--border);gap:2px;}.corner-icon{font-size:1.8em;}.corner-label{font-family:'Share Tech Mono',monospace;font-size:0.75em;color:var(--muted);text-align:center;letter-spacing:1px;line-height:1.2;}
+.cell{display:flex;flex-direction:column;border:1px solid #1a1a28;cursor:pointer;position:relative;overflow:hidden;transition:filter 0.15s;}.cell:hover{filter:brightness(1.2);z-index:2;}
+.cell-color-bar{flex-shrink:0;}
+.cell.bottom .cell-color-bar{order:-1;height:5px;width:100%;}.cell.top .cell-color-bar{order:1;height:5px;width:100%;}.cell.left .cell-color-bar{order:1;width:5px;height:100%;position:absolute;right:0;top:0;}.cell.right .cell-color-bar{order:-1;width:5px;height:100%;position:absolute;left:0;top:0;}
+.cell-body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2px;text-align:center;gap:1px;}.cell.left .cell-body,.cell.right .cell-body{writing-mode:vertical-rl;}
+.cell-icon{font-size:1.5em;line-height:1;}.cell-name{font-size:0.85em;font-weight:700;color:var(--text);line-height:1.1;}.cell-price{font-size:0.75em;color:var(--cs-orange);font-family:'Share Tech Mono',monospace;}
+.cell.tax{background:#1a0a0a;}.cell.chance{background:#0a0f1a;}.cell.community{background:#0a1a0a;}.cell.mortgaged{opacity:0.45;}
+.cell-houses{display:flex;gap:1px;flex-wrap:wrap;justify-content:center;margin-top:1px;}.house-dot{width:4px;height:4px;border-radius:1px;background:var(--cs-green);}.hotel-dot{width:7px;height:4px;border-radius:1px;background:var(--cs-red);}
+.cell-owned-bar{position:absolute;bottom:0;left:0;right:0;height:3px;opacity:0.8;}.mortgage-x{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2em;opacity:0.3;pointer-events:none;}
+.board-center{grid-column:2/11;grid-row:2/11;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;background:radial-gradient(ellipse at center,rgba(240,165,0,0.03) 0%,transparent 65%);}
+.bc-logo{font-family:'Teko',sans-serif;font-size:clamp(16px,2.2vw,28px);font-weight:700;color:var(--cs-orange);letter-spacing:3px;text-shadow:var(--glow-o);}.bc-sub{font-family:'Share Tech Mono',monospace;font-size:clamp(6px,0.7vw,9px);color:var(--muted);letter-spacing:2px;text-transform:uppercase;}
+.dice-wrap{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:6px;}.dice-row{display:flex;gap:6px;}
+.die{width:clamp(22px,2.8vw,34px);height:clamp(22px,2.8vw,34px);background:var(--bg3);border:1px solid var(--border2);border-radius:3px;display:flex;align-items:center;justify-content:center;font-size:clamp(12px,1.6vw,20px);font-family:'Share Tech Mono',monospace;color:var(--cs-orange);}
+.die.rolling{animation:rolldie 0.4s ease;}@keyframes rolldie{0%{transform:rotate(0) scale(1)}50%{transform:rotate(180deg) scale(1.2)}100%{transform:rotate(360deg) scale(1)}}
+.roll-btn{font-family:'Teko',sans-serif;font-size:clamp(9px,1.1vw,13px);font-weight:600;letter-spacing:2px;padding:clamp(5px,0.7vw,8px) clamp(12px,1.5vw,20px);background:var(--cs-orange);color:#0c0c0e;border:none;border-radius:2px;cursor:pointer;text-transform:uppercase;transition:all 0.15s;box-shadow:var(--glow-o);}.roll-btn:hover:not(:disabled){background:#fff;}.roll-btn:disabled{background:var(--border);color:var(--muted);cursor:not-allowed;box-shadow:none;}
+.doubles-badge{font-family:'Share Tech Mono',monospace;font-size:clamp(6px,0.8vw,9px);color:var(--cs-yellow);letter-spacing:1px;display:none;}
+.token{position:absolute;font-size:clamp(8px,1.1vw,14px);pointer-events:none;z-index:10;transition:all 0.5s cubic-bezier(0.4,0,0.2,1);filter:drop-shadow(0 0 4px rgba(240,165,0,0.8));}
+/* RIGHT */
+.rp{background:var(--panel);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.rp-tabs{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
+.rp-tab{flex:1;padding:9px 4px;font-family:'Teko',sans-serif;font-size:0.8rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;background:transparent;border:none;color:var(--muted);cursor:pointer;transition:all 0.15s;border-bottom:2px solid transparent;margin-bottom:-1px;}.rp-tab:hover{color:var(--text);}.rp-tab.act{color:var(--cs-orange);border-bottom-color:var(--cs-orange);}
+.rp-body{flex:1;overflow-y:auto;padding:12px;display:none;flex-direction:column;gap:8px;}.rp-body.act{display:flex;}
+.log-entry{padding:7px 10px;border-radius:3px;background:var(--bg3);border:1px solid var(--border);font-size:0.82rem;line-height:1.4;border-left:3px solid var(--border2);}
+.le-move{border-left-color:var(--cs-blue)!important;}.le-buy{border-left-color:var(--cs-green)!important;}.le-rent{border-left-color:var(--cs-red)!important;}.le-tax{border-left-color:var(--cs-orange)!important;}.le-card{border-left-color:var(--cs-purple)!important;}.le-sys{border-left-color:var(--dim)!important;}
+.log-time{font-family:'Share Tech Mono',monospace;font-size:0.65rem;color:var(--muted);margin-bottom:2px;}
+.prop-group{margin-bottom:12px;}.prop-group-title{font-size:0.65rem;letter-spacing:2px;color:var(--muted);font-family:'Share Tech Mono',monospace;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.prop-item{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:3px;background:var(--bg3);border:1px solid var(--border);margin-bottom:4px;font-size:0.82rem;}.pi-color{width:8px;height:24px;border-radius:1px;flex-shrink:0;}.pi-name{flex:1;font-weight:700;}.pi-owner{font-size:0.7rem;color:var(--muted);}.pi-houses{font-size:0.65rem;color:var(--cs-green);font-family:'Share Tech Mono',monospace;}.pi-mort{font-size:0.65rem;color:var(--cs-red);font-family:'Share Tech Mono',monospace;}
+.status-bar{background:var(--bg3);border-top:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:16px;font-family:'Share Tech Mono',monospace;font-size:0.7rem;color:var(--muted);flex-shrink:0;}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--cs-green);animation:blink 1.2s infinite;flex-shrink:0;}.status-turn{color:var(--cs-orange);font-weight:700;}
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:1000;align-items:center;justify-content:center;padding:20px;}.modal-overlay.open{display:flex;}
+.modal{background:var(--panel);border:1px solid var(--border2);border-radius:6px;padding:26px;width:100%;max-width:440px;box-shadow:0 0 60px rgba(0,0,0,0.8),0 0 30px rgba(240,165,0,0.1);max-height:90vh;overflow-y:auto;}
+.modal h3{font-family:'Teko',sans-serif;font-size:1.8rem;color:var(--cs-orange);letter-spacing:2px;margin-bottom:4px;}.modal .m-sub{font-size:0.85rem;color:var(--muted);margin-bottom:14px;font-family:'Share Tech Mono',monospace;}.modal .m-price{font-size:1.1rem;color:var(--cs-yellow);font-family:'Share Tech Mono',monospace;margin-bottom:6px;font-weight:700;}.modal .m-rent{font-size:0.82rem;color:var(--muted);margin-bottom:18px;line-height:1.8;}
+.modal-btns{display:flex;gap:10px;flex-wrap:wrap;}.modal-btns button{flex:1;font-family:'Teko',sans-serif;font-size:1.1rem;font-weight:600;letter-spacing:2px;padding:10px;border-radius:3px;cursor:pointer;text-transform:uppercase;transition:all 0.15s;min-width:80px;}
+.mbtn-buy{background:var(--cs-orange);color:#0c0c0e;border:2px solid var(--cs-orange);}.mbtn-buy:hover{background:#fff;border-color:#fff;}
+.mbtn-pass{background:transparent;color:var(--muted);border:2px solid var(--border2);}.mbtn-pass:hover{border-color:var(--cs-red);color:var(--cs-red);}
+.mbtn-ok{background:var(--cs-blue);color:#fff;border:2px solid var(--cs-blue);}.mbtn-ok:hover{background:#6ab0ff;}
+.mbtn-auction{background:var(--cs-purple);color:#fff;border:2px solid var(--cs-purple);}.mbtn-auction:hover{background:#b080ff;}
+.color-swatch{width:100%;height:5px;border-radius:2px;margin-bottom:14px;}
+.auction-box{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;padding:14px;margin-bottom:14px;}.auction-box .ab-title{font-family:'Teko',sans-serif;font-size:1rem;color:var(--cs-orange);letter-spacing:2px;margin-bottom:8px;}.auction-box .ab-bid{font-family:'Share Tech Mono',monospace;font-size:1.4rem;color:var(--cs-yellow);margin-bottom:4px;}.auction-box .ab-leader{font-size:0.8rem;color:var(--muted);}
+.auction-input{display:flex;gap:8px;margin-bottom:12px;}.auction-input input{flex:1;padding:8px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:1rem;outline:none;}.auction-input input:focus{border-color:var(--cs-orange);}
+.trade-section{margin-bottom:14px;}.trade-section label{display:block;font-size:0.7rem;letter-spacing:2px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;font-family:'Share Tech Mono',monospace;}
+.trade-props{display:flex;flex-wrap:wrap;gap:6px;}.trade-prop-btn{padding:4px 10px;font-size:0.75rem;font-weight:700;border-radius:2px;border:1px solid var(--border2);background:var(--bg3);color:var(--text);cursor:pointer;font-family:'Share Tech Mono',monospace;transition:all 0.15s;}.trade-prop-btn.sel{border-color:var(--cs-orange);background:rgba(240,165,0,0.15);color:var(--cs-orange);}
+.card-display{background:linear-gradient(135deg,#0a0f1a,#111828);border:2px solid var(--cs-blue);border-radius:6px;padding:16px;margin-bottom:14px;text-align:center;}.card-display .cd-type{font-family:'Share Tech Mono',monospace;font-size:0.65rem;letter-spacing:3px;color:var(--cs-blue);margin-bottom:8px;}.card-display .cd-icon{font-size:2.5rem;margin-bottom:8px;}.card-display .cd-text{font-family:'Teko',sans-serif;font-size:1.3rem;font-weight:600;color:var(--text);line-height:1.3;}
+.card-display.cc{background:linear-gradient(135deg,#0a1a0a,#0f280f);border-color:var(--cs-green);}.card-display.cc .cd-type{color:var(--cs-green);}
+.bankrupt-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:2000;align-items:center;justify-content:center;flex-direction:column;gap:16px;text-align:center;}.bankrupt-overlay.open{display:flex;}
+.win-title{font-family:'Teko',sans-serif;font-size:5rem;color:var(--cs-orange);letter-spacing:4px;text-shadow:var(--glow-o);}
+.sel-input{width:100%;padding:8px;background:var(--bg3);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-family:'Barlow Condensed',sans-serif;font-size:1rem;outline:none;margin-bottom:10px;}
+.num-input{width:100%;padding:8px 12px;background:var(--bg);border:1px solid var(--border2);border-radius:3px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:1rem;outline:none;}
+::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-track{background:var(--bg3);}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 </style>
 </head>
 <body>
-
-<!-- ═══ HOME ═══ -->
+<!-- HOME -->
 <div id="home" class="screen active">
-  <div class="ct-badge">● ONLINE · FREE TO PLAY · NO SIGNUP</div>
-  <div class="home-title">
-    <span class="t1">SITE</span>
-    <span class="t2">CONTROL</span>
-    <span class="t3">cs2 monopoly</span>
-  </div>
-  <p class="home-sub">Buy bombsites. Plant your economy. Bankrupt the enemy team. The real competitive meta starts here.</p>
-  <div class="home-maps">
-    <span class="map-chip mc-dust">dust2</span>
-    <span class="map-chip mc-mirage">mirage</span>
-    <span class="map-chip mc-inferno">inferno</span>
-    <span class="map-chip mc-nuke">nuke</span>
-    <span class="map-chip mc-over">overpass</span>
-    <span class="map-chip mc-anc">ancient</span>
-  </div>
-  <div class="cta-row">
-    <button class="btn btn-primary" onclick="showLobby()">▶ PLAY NOW</button>
-    <button class="btn btn-ghost" onclick="showLobby()">HOST PRIVATE MATCH</button>
-  </div>
+  <div class="ct-badge">● FREE · NO SIGNUP · FULL MONOPOLY RULES</div>
+  <div class="home-title"><span class="t1">SITE</span><span class="t2">CONTROL</span><span class="t3">cs2 monopoly — full rules edition</span></div>
+  <p class="home-sub">Buy bombsites. Build your weapon loadout. Bankrupt the enemy team. Full Monopoly rules including auctions, trading, mortgages, jail cards & doubles.</p>
+  <div class="home-maps"><span class="map-chip mc-dust">dust2</span><span class="map-chip mc-mirage">mirage</span><span class="map-chip mc-inferno">inferno</span><span class="map-chip mc-nuke">nuke</span><span class="map-chip mc-over">overpass</span><span class="map-chip mc-anc">ancient</span></div>
+  <div class="cta-row"><button class="btn btn-primary" onclick="showLobby()">▶ PLAY NOW</button><button class="btn btn-ghost" onclick="showLobby()">HOST PRIVATE MATCH</button></div>
   <div class="home-features">
-    <div class="feat-card">
-      <div class="feat-icon">🎯</div>
-      <h3>CS2 MAPS</h3>
-      <p>Own Dust2, Mirage, Inferno, Nuke and more. Each map group has unique rent scaling.</p>
-    </div>
-    <div class="feat-card">
-      <div class="feat-icon">🔫</div>
-      <h3>WEAPON UPGRADES</h3>
-      <p>Buy rifles & AWPs instead of houses. Go from Glock to M4 to full AK loadout.</p>
-    </div>
-    <div class="feat-card">
-      <div class="feat-icon">🤖</div>
-      <h3>BOT OPPONENTS</h3>
-      <p>Play against AI bots at any difficulty. No signup or download required.</p>
-    </div>
-    <div class="feat-card">
-      <div class="feat-icon">💰</div>
-      <h3>ECONOMY META</h3>
-      <p>Start with $1500. Manage buy rounds, eco rounds, and force buys wisely.</p>
-    </div>
+    <div class="feat-card"><div class="feat-icon">🎯</div><h3>FULL RULES</h3><p>Auctions when you pass, trading, mortgages, doubles roll-again, 3 doubles = jail.</p></div>
+    <div class="feat-card"><div class="feat-icon">🔫</div><h3>WEAPON UPGRADES</h3><p>Build from Glock to full Arsenal. Own the complete map group to start upgrading.</p></div>
+    <div class="feat-card"><div class="feat-icon">📡</div><h3>12 INTEL CARDS</h3><p>Advance to GO, collect cash, general repairs, get out of jail free, leader bonuses & more.</p></div>
+    <div class="feat-card"><div class="feat-icon">🤝</div><h3>TRADE SYSTEM</h3><p>Propose property + cash trades with any player to complete your map groups.</p></div>
   </div>
 </div>
-
-<!-- ═══ LOBBY ═══ -->
+<!-- LOBBY -->
 <div id="lobby" class="screen">
   <div class="lobby-card">
-    <h2>MATCH SETUP</h2>
-    <div class="sub">// configure your lobby</div>
-
-    <div class="fg">
-      <label>Your Name</label>
-      <input type="text" id="pname" value="Player1" maxlength="12" />
-    </div>
-    <div class="fg">
-      <label>Choose Token</label>
+    <h2>MATCH SETUP</h2><div class="sub">// configure your lobby</div>
+    <div class="fg"><label>Your Name</label><input type="text" id="pname" value="Player1" maxlength="12"/></div>
+    <div class="fg"><label>Choose Token</label>
       <div class="avatar-grid" id="avatar-grid">
-        <div class="av-btn sel" data-av="🐺">🐺</div>
-        <div class="av-btn" data-av="🦊">🦊</div>
-        <div class="av-btn" data-av="🐉">🐉</div>
-        <div class="av-btn" data-av="💀">💀</div>
-        <div class="av-btn" data-av="🎯">🎯</div>
-        <div class="av-btn" data-av="⚡">⚡</div>
-        <div class="av-btn" data-av="🔥">🔥</div>
-        <div class="av-btn" data-av="🤖">🤖</div>
+        <div class="av-btn sel" data-av="🐺">🐺</div><div class="av-btn" data-av="🦊">🦊</div><div class="av-btn" data-av="🐉">🐉</div><div class="av-btn" data-av="💀">💀</div>
+        <div class="av-btn" data-av="🎯">🎯</div><div class="av-btn" data-av="⚡">⚡</div><div class="av-btn" data-av="🔥">🔥</div><div class="av-btn" data-av="🤖">🤖</div>
       </div>
     </div>
-    <div class="fg">
-      <label>Opponents (Bots)</label>
-      <select id="num-bots">
-        <option value="1">1 Bot (2 players total)</option>
-        <option value="2" selected>2 Bots (3 players total)</option>
-        <option value="3">3 Bots (4 players total)</option>
-      </select>
+    <div class="fg"><label>Opponents (Bots)</label>
+      <select id="num-bots"><option value="1">1 Bot (2 players)</option><option value="2" selected>2 Bots (3 players)</option><option value="3">3 Bots (4 players)</option></select>
     </div>
-
     <div class="sep"></div>
-
-    <div class="lp-title">LOBBY</div>
+    <div class="lp-title">LOBBY PREVIEW</div>
     <div class="player-slots" id="lobby-slots"></div>
-
     <button class="btn btn-primary" style="width:100%" onclick="startGame()">START MATCH</button>
     <button class="btn btn-ghost" style="width:100%;margin-top:8px" onclick="showScreen('home')">← BACK</button>
   </div>
 </div>
-
-<!-- ═══ GAME ═══ -->
+<!-- GAME -->
 <div id="game" class="screen">
   <div class="game-wrap">
-
-    <!-- LEFT PANEL -->
     <div class="lp">
       <div class="lp-title">// PLAYERS</div>
       <div id="player-cards"></div>
       <div style="flex:1"></div>
-      <button class="build-btn" id="build-btn" onclick="tryBuild()">🔧 BUILD WEAPON</button>
+      <div class="action-btns" id="action-btns"></div>
     </div>
-
-    <!-- BOARD -->
     <div class="ba">
-      <div class="board-wrap">
-        <div class="board" id="board"></div>
-      </div>
-      <!-- Status bar below board -->
-      <div class="status-bar" style="width:100%;max-width:min(calc(100vw - 480px), 620px);border-radius:0 0 3px 3px;margin-top:0">
-        <div class="status-dot"></div>
-        <span>TURN <span id="st-turn">1</span></span>
-        <span>·</span>
-        <span>CURRENT: <span class="status-turn" id="st-player">—</span></span>
-        <span style="flex:1"></span>
-        <span id="st-msg" style="color:var(--text)">Roll the dice to move</span>
+      <div class="board-wrap"><div class="board" id="board"></div></div>
+      <div class="status-bar" style="width:100%;max-width:min(calc(100vw - 500px),620px);border-radius:0 0 3px 3px;">
+        <div class="status-dot"></div><span>TURN <span id="st-turn">1</span></span><span>·</span>
+        <span>CURRENT: <span class="status-turn" id="st-player">—</span></span><span style="flex:1"></span>
+        <span id="st-msg">Roll the dice to move</span>
       </div>
     </div>
-
-    <!-- RIGHT PANEL -->
     <div class="rp">
       <div class="rp-tabs">
-        <button class="rp-tab act" onclick="switchTab('log')">MATCH LOG</button>
-        <button class="rp-tab" onclick="switchTab('props')">SITES</button>
+        <button class="rp-tab act" id="tab-btn-log" onclick="switchTab('log')">LOG</button>
+        <button class="rp-tab" id="tab-btn-props" onclick="switchTab('props')">SITES</button>
+        <button class="rp-tab" id="tab-btn-rules" onclick="switchTab('rules')">RULES</button>
       </div>
       <div class="rp-body act" id="tab-log"></div>
       <div class="rp-body" id="tab-props"></div>
+      <div class="rp-body" id="tab-rules"></div>
     </div>
-
   </div>
 </div>
-
-<!-- Action Modal -->
+<!-- Modal -->
 <div class="modal-overlay" id="modal">
-  <div class="modal">
+  <div class="modal" id="modal-inner">
     <div class="color-swatch" id="m-swatch"></div>
-    <h3 id="m-title">PROPERTY</h3>
-    <div class="m-sub" id="m-sub"></div>
-    <div class="m-price" id="m-price"></div>
-    <div class="m-rent" id="m-rent"></div>
+    <h3 id="m-title"></h3><div class="m-sub" id="m-sub"></div>
+    <div id="m-card-display"></div>
+    <div class="m-price" id="m-price"></div><div class="m-rent" id="m-rent"></div>
+    <div id="m-extra"></div>
     <div class="modal-btns" id="m-btns"></div>
   </div>
 </div>
-
-<!-- End screen -->
+<!-- End -->
 <div class="bankrupt-overlay" id="endscreen">
-  <div class="win-title" id="win-title">WINNER!</div>
+  <div class="win-title">VICTORY!</div>
   <div style="font-size:4rem" id="win-av"></div>
-  <div style="font-family:'Teko',sans-serif;font-size:2rem;color:var(--text);letter-spacing:2px" id="win-name"></div>
-  <div style="font-family:'Share Tech Mono',monospace;font-size:0.9rem;color:var(--muted)" id="win-cash"></div>
-  <button class="btn btn-primary" style="margin-top:20px" onclick="location.reload()">▶ PLAY AGAIN</button>
+  <div style="font-family:'Teko',sans-serif;font-size:2.5rem;color:var(--text);letter-spacing:2px" id="win-name"></div>
+  <div style="font-family:'Share Tech Mono',monospace;font-size:0.9rem;color:var(--muted);margin-top:8px" id="win-stats"></div>
+  <button class="btn btn-primary" style="margin-top:24px" onclick="location.reload()">▶ PLAY AGAIN</button>
 </div>
 
 <script>
-// ═══════════════════════════════════════════
-// BOARD DATA — CS2 themed Monopoly
-// ═══════════════════════════════════════════
-
-const GROUPS = {
-  dust:    { name:'DUST2',    color:'#c8a060', textColor:'#0c0c0e' },
-  mirage:  { name:'MIRAGE',   color:'#4080e0', textColor:'#fff' },
-  inferno: { name:'INFERNO',  color:'#e85030', textColor:'#fff' },
-  nuke:    { name:'NUKE',     color:'#50b070', textColor:'#0c0c0e' },
-  overpass:{ name:'OVERPASS', color:'#9060d0', textColor:'#fff' },
-  ancient: { name:'ANCIENT',  color:'#d0a040', textColor:'#0c0c0e' },
-  vertigo: { name:'VERTIGO',  color:'#40b0c0', textColor:'#0c0c0e' },
-  anubis:  { name:'ANUBIS',   color:'#e07030', textColor:'#fff' },
-};
-
-const RENT_MULT = [1, 5, 15, 45, 80, 125]; // 0 houses → hotel
-
-// Board spaces (40 total, clockwise from GO at index 0)
-// type: go, prop, tax, chance, community, jail, go2jail, freep, airport, utility
-const SPACES = [
-  // Bottom row right→left (indices 0–10)
-  { i:0,  type:'go',        name:'GO',           icon:'🚀', desc:'Collect $200' },
-  { i:1,  type:'prop',      name:'D2 Long A',    icon:'🗺️', group:'dust',    price:60,  rent:[2,10,30,90,160,250] },
-  { i:2,  type:'community', name:'CHEST',        icon:'📦', desc:'Community Chest' },
-  { i:3,  type:'prop',      name:'D2 Short',     icon:'🗺️', group:'dust',    price:60,  rent:[4,20,60,180,320,450] },
-  { i:4,  type:'tax',       name:'ENTRY FEE',    icon:'💸', desc:'Pay $200',  amount:200 },
-  { i:5,  type:'airport',   name:'NUKE BOOST',   icon:'✈️', desc:'Airport #1', price:200 },
-  { i:6,  type:'prop',      name:'Mirage A Site', icon:'🗺️', group:'mirage', price:100, rent:[6,30,90,270,400,550] },
-  { i:7,  type:'chance',    name:'INTEL',        icon:'🎴', desc:'Chance Card' },
-  { i:8,  type:'prop',      name:'Mirage Mid',   icon:'🗺️', group:'mirage', price:100, rent:[6,30,90,270,400,550] },
-  { i:9,  type:'prop',      name:'Mirage B Site', icon:'🗺️', group:'mirage', price:120, rent:[8,40,100,300,450,600] },
-  { i:10, type:'jail',      name:'SPECTATE',     icon:'👁️', desc:'Just visiting / Jail' },
-
-  // Left column bottom→top (indices 11–19)
-  { i:11, type:'prop',      name:'Inferno A',    icon:'🗺️', group:'inferno', price:140, rent:[10,50,150,450,625,750] },
-  { i:12, type:'utility',   name:'FLASHBANG',    icon:'💡', desc:'Utility', price:150 },
-  { i:13, type:'prop',      name:'Inferno Mid',  icon:'🗺️', group:'inferno', price:140, rent:[10,50,150,450,625,750] },
-  { i:14, type:'prop',      name:'Inferno B',    icon:'🗺️', group:'inferno', price:160, rent:[12,60,180,500,700,900] },
-  { i:15, type:'airport',   name:'MIRAGE RUSH',  icon:'✈️', desc:'Airport #2', price:200 },
-  { i:16, type:'prop',      name:'Nuke A Roof',  icon:'🗺️', group:'nuke',    price:180, rent:[14,70,200,550,750,950] },
-  { i:17, type:'community', name:'CHEST',        icon:'📦', desc:'Community Chest' },
-  { i:18, type:'prop',      name:'Nuke B Site',  icon:'🗺️', group:'nuke',    price:180, rent:[14,70,200,550,750,950] },
-  { i:19, type:'prop',      name:'Nuke Outside', icon:'🗺️', group:'nuke',    price:200, rent:[16,80,220,600,800,1000] },
-
-  // Top row left→right (indices 20–30)
-  { i:20, type:'freep',     name:'FREE PLANT',   icon:'💣', desc:'Free Parking' },
-  { i:21, type:'prop',      name:'Overpass A',   icon:'🗺️', group:'overpass',price:220, rent:[18,90,250,700,875,1050] },
-  { i:22, type:'chance',    name:'INTEL',        icon:'🎴', desc:'Chance Card' },
-  { i:23, type:'prop',      name:'Overpass B',   icon:'🗺️', group:'overpass',price:220, rent:[18,90,250,700,875,1050] },
-  { i:24, type:'prop',      name:'Overpass Mid', icon:'🗺️', group:'overpass',price:240, rent:[20,100,300,750,925,1100] },
-  { i:25, type:'airport',   name:'INFERNO FLY',  icon:'✈️', desc:'Airport #3', price:200 },
-  { i:26, type:'prop',      name:'Ancient A',    icon:'🗺️', group:'ancient', price:260, rent:[22,110,330,800,975,1150] },
-  { i:27, type:'prop',      name:'Ancient B',    icon:'🗺️', group:'ancient', price:260, rent:[22,110,330,800,975,1150] },
-  { i:28, type:'utility',   name:'SMOKE COVER',  icon:'💡', desc:'Utility', price:150 },
-  { i:29, type:'prop',      name:'Ancient Ramp', icon:'🗺️', group:'ancient', price:280, rent:[24,120,360,850,1025,1200] },
-  { i:30, type:'go2jail',   name:'GO JAIL',      icon:'🚔', desc:'Go To Spectate' },
-
-  // Right column top→bottom (indices 31–39)
-  { i:31, type:'prop',      name:'Vertigo A',    icon:'🗺️', group:'vertigo', price:300, rent:[26,130,390,900,1100,1275] },
-  { i:32, type:'prop',      name:'Vertigo B',    icon:'🗺️', group:'vertigo', price:300, rent:[26,130,390,900,1100,1275] },
-  { i:33, type:'community', name:'CHEST',        icon:'📦', desc:'Community Chest' },
-  { i:34, type:'prop',      name:'Vertigo Mid',  icon:'🗺️', group:'vertigo', price:320, rent:[28,150,450,1000,1200,1400] },
-  { i:35, type:'airport',   name:'DUST LANE',    icon:'✈️', desc:'Airport #4', price:200 },
-  { i:36, type:'chance',    name:'INTEL',        icon:'🎴', desc:'Chance Card' },
-  { i:37, type:'prop',      name:'Anubis A',     icon:'🗺️', group:'anubis',  price:350, rent:[35,175,500,1100,1300,1500] },
-  { i:38, type:'tax',       name:'ECO TAX',      icon:'💸', desc:'Pay $100',  amount:100 },
-  { i:39, type:'prop',      name:'Anubis B',     icon:'🗺️', group:'anubis',  price:400, rent:[50,200,600,1400,1700,2000] },
+// ═══════════════ DATA ═══════════════
+const GROUPS={dust:{name:'DUST2',color:'#c8a060'},mirage:{name:'MIRAGE',color:'#4080e0'},inferno:{name:'INFERNO',color:'#e85030'},nuke:{name:'NUKE',color:'#50b070'},overpass:{name:'OVERPASS',color:'#9060d0'},ancient:{name:'ANCIENT',color:'#d0a040'},vertigo:{name:'VERTIGO',color:'#40b0c0'},anubis:{name:'ANUBIS',color:'#e07030'}};
+const SP=[
+  {i:0,type:'go',name:'GO',icon:'🚀'},
+  {i:1,type:'prop',name:'D2 Long A',icon:'🗺️',group:'dust',price:60,hcost:30,rent:[2,10,30,90,160,250]},
+  {i:2,type:'community',name:'CHEST',icon:'📦'},
+  {i:3,type:'prop',name:'D2 Short',icon:'🗺️',group:'dust',price:60,hcost:30,rent:[4,20,60,180,320,450]},
+  {i:4,type:'tax',name:'ENTRY FEE',icon:'💸',amount:200},
+  {i:5,type:'airport',name:'NUKE BOOST',icon:'✈️',price:200},
+  {i:6,type:'prop',name:'Mirage A',icon:'🗺️',group:'mirage',price:100,hcost:50,rent:[6,30,90,270,400,550]},
+  {i:7,type:'chance',name:'INTEL',icon:'🎴'},
+  {i:8,type:'prop',name:'Mirage Mid',icon:'🗺️',group:'mirage',price:100,hcost:50,rent:[6,30,90,270,400,550]},
+  {i:9,type:'prop',name:'Mirage B',icon:'🗺️',group:'mirage',price:120,hcost:50,rent:[8,40,100,300,450,600]},
+  {i:10,type:'jail',name:'SPECTATE',icon:'👁️'},
+  {i:11,type:'prop',name:'Inferno A',icon:'🗺️',group:'inferno',price:140,hcost:100,rent:[10,50,150,450,625,750]},
+  {i:12,type:'utility',name:'FLASHBANG',icon:'💡',price:150},
+  {i:13,type:'prop',name:'Inferno Mid',icon:'🗺️',group:'inferno',price:140,hcost:100,rent:[10,50,150,450,625,750]},
+  {i:14,type:'prop',name:'Inferno B',icon:'🗺️',group:'inferno',price:160,hcost:100,rent:[12,60,180,500,700,900]},
+  {i:15,type:'airport',name:'MIRAGE RUSH',icon:'✈️',price:200},
+  {i:16,type:'prop',name:'Nuke A Roof',icon:'🗺️',group:'nuke',price:180,hcost:100,rent:[14,70,200,550,750,950]},
+  {i:17,type:'community',name:'CHEST',icon:'📦'},
+  {i:18,type:'prop',name:'Nuke B',icon:'🗺️',group:'nuke',price:180,hcost:100,rent:[14,70,200,550,750,950]},
+  {i:19,type:'prop',name:'Nuke Outside',icon:'🗺️',group:'nuke',price:200,hcost:100,rent:[16,80,220,600,800,1000]},
+  {i:20,type:'freep',name:'FREE PLANT',icon:'💣'},
+  {i:21,type:'prop',name:'Overpass A',icon:'🗺️',group:'overpass',price:220,hcost:150,rent:[18,90,250,700,875,1050]},
+  {i:22,type:'chance',name:'INTEL',icon:'🎴'},
+  {i:23,type:'prop',name:'Overpass B',icon:'🗺️',group:'overpass',price:220,hcost:150,rent:[18,90,250,700,875,1050]},
+  {i:24,type:'prop',name:'Overpass Mid',icon:'🗺️',group:'overpass',price:240,hcost:150,rent:[20,100,300,750,925,1100]},
+  {i:25,type:'airport',name:'INFERNO FLY',icon:'✈️',price:200},
+  {i:26,type:'prop',name:'Ancient A',icon:'🗺️',group:'ancient',price:260,hcost:150,rent:[22,110,330,800,975,1150]},
+  {i:27,type:'prop',name:'Ancient B',icon:'🗺️',group:'ancient',price:260,hcost:150,rent:[22,110,330,800,975,1150]},
+  {i:28,type:'utility',name:'SMOKE COVER',icon:'💡',price:150},
+  {i:29,type:'prop',name:'Ancient Ramp',icon:'🗺️',group:'ancient',price:280,hcost:150,rent:[24,120,360,850,1025,1200]},
+  {i:30,type:'go2jail',name:'GO SPECTATE',icon:'🚔'},
+  {i:31,type:'prop',name:'Vertigo A',icon:'🗺️',group:'vertigo',price:300,hcost:200,rent:[26,130,390,900,1100,1275]},
+  {i:32,type:'prop',name:'Vertigo B',icon:'🗺️',group:'vertigo',price:300,hcost:200,rent:[26,130,390,900,1100,1275]},
+  {i:33,type:'community',name:'CHEST',icon:'📦'},
+  {i:34,type:'prop',name:'Vertigo Mid',icon:'🗺️',group:'vertigo',price:320,hcost:200,rent:[28,150,450,1000,1200,1400]},
+  {i:35,type:'airport',name:'DUST LANE',icon:'✈️',price:200},
+  {i:36,type:'chance',name:'INTEL',icon:'🎴'},
+  {i:37,type:'prop',name:'Anubis A',icon:'🗺️',group:'anubis',price:350,hcost:200,rent:[35,175,500,1100,1300,1500]},
+  {i:38,type:'tax',name:'ECO TAX',icon:'💸',amount:100},
+  {i:39,type:'prop',name:'Anubis B',icon:'🗺️',group:'anubis',price:400,hcost:200,rent:[50,200,600,1400,1700,2000]},
 ];
 
-const CHANCE_CARDS = [
-  { text:'Clutch round! Collect $150.', fn: p => { p.cash += 150; return `${p.name} clutched — +$150`; } },
-  { text:'Smoked by admin. Pay $50.', fn: p => { p.cash -= 50; return `${p.name} smoked — -$50`; } },
-  { text:'Advance to GO. Collect $200.', fn: (p,g) => { if(p.pos > 0) p.cash += 200; p.pos = 0; return `${p.name} advances to GO`; } },
-  { text:'AWP tax. Pay $150.', fn: p => { p.cash -= 150; return `${p.name} pays AWP tax — -$150`; } },
-  { text:'Knife round win! Collect $50.', fn: p => { p.cash += 50; return `${p.name} wins knife round — +$50`; } },
-  { text:'Move back 3 spaces.', fn: (p,g) => { p.pos = (p.pos - 3 + 40) % 40; return `${p.name} moves back 3`; } },
+const CHANCE=[
+  {icon:'🚀',text:'Advance to GO. Collect $200.',fn:(p,G)=>{if(p.pos!==0)p.cash+=200;p.pos=0;return'advances to GO +$200';}},
+  {icon:'✈️',text:'Rush B! Advance to nearest Airport.',fn:(p,G)=>{const aps=[5,15,25,35];let n=aps.find(a=>a>p.pos)||aps[0];if(n<p.pos)p.cash+=200;p.pos=n;G.doubleRent=true;return'rushes to nearest airport';}},
+  {icon:'💰',text:'Operation drop! Collect $50.',fn:(p,G)=>{p.cash+=50;return'collects $50';}},
+  {icon:'🚔',text:'VAC banned! Go directly to Spectate.',fn:(p,G)=>{p.pos=10;p.jailTurns=3;return'sent to Spectate';}},
+  {icon:'🔧',text:'General repairs. Pay $40/weapon, $115/Arsenal.',fn:(p,G)=>{let t=0;p.properties.forEach(i=>{const h=G.H[i]||0;t+=h<5?h*40:115;});p.cash-=t;return`pays $${t} repairs`;}},
+  {icon:'📦',text:'Rank up bonus! Collect $150.',fn:(p,G)=>{p.cash+=150;return'collects $150';}},
+  {icon:'🎴',text:'Get Out of Spectate Free! Keep this card.',fn:(p,G)=>{p.jailCards++;return'gets Get Out of Spectate Free card';}},
+  {icon:'🔙',text:'Move back 3 spaces.',fn:(p,G)=>{p.pos=(p.pos-3+40)%40;return'moves back 3 spaces';}},
+  {icon:'💸',text:'AWP tax. Pay $150.',fn:(p,G)=>{p.cash-=150;return'pays $150';}},
+  {icon:'🗺️',text:'Advance to Mirage Mid (space 8). Collect $200 if you pass GO.',fn:(p,G)=>{if(p.pos>8)p.cash+=200;p.pos=8;return'advances to Mirage Mid';}},
+  {icon:'🏦',text:'Bank dividend. Collect $50.',fn:(p,G)=>{p.cash+=50;return'collects $50';}},
+  {icon:'👑',text:'Elected IGL! Collect $100 from each player.',fn:(p,G)=>{let t=0;G.players.forEach((pl,i)=>{if(i!==p.id&&!pl.bust){pl.cash-=100;t+=100;}});p.cash+=t;return`collects $${t} from all players`;}},
+];
+const COMMUNITY=[
+  {icon:'📈',text:'Economy spike! Collect $200.',fn:(p,G)=>{p.cash+=200;return'collects $200';}},
+  {icon:'🩺',text:'Kit charge. Pay $50.',fn:(p,G)=>{p.cash-=50;return'pays $50';}},
+  {icon:'🎉',text:'Case unboxing! Collect $100.',fn:(p,G)=>{p.cash+=100;return'collects $100';}},
+  {icon:'💀',text:'Server crash. Pay $100.',fn:(p,G)=>{p.cash-=100;return'pays $100';}},
+  {icon:'🎴',text:'Get Out of Spectate Free! Keep this card.',fn:(p,G)=>{p.jailCards++;return'gets Get Out of Spectate Free card';}},
+  {icon:'🏥',text:'Hospital fees. Pay $100.',fn:(p,G)=>{p.cash-=100;return'pays $100';}},
+  {icon:'🎁',text:"It's your birthday! Collect $10 from each player.",fn:(p,G)=>{let t=0;G.players.forEach((pl,i)=>{if(i!==p.id&&!pl.bust){pl.cash-=10;t+=10;}});p.cash+=t;return`collects $${t}`;}},
+  {icon:'🚀',text:'Advance to GO! Collect $200.',fn:(p,G)=>{if(p.pos!==0)p.cash+=200;p.pos=0;return'advances to GO +$200';}},
+  {icon:'💰',text:'Tax refund. Collect $20.',fn:(p,G)=>{p.cash+=20;return'collects $20';}},
+  {icon:'🏆',text:'Tournament win! Collect $100.',fn:(p,G)=>{p.cash+=100;return'collects $100';}},
 ];
 
-const COMMUNITY_CARDS = [
-  { text:'Rank up bonus! Collect $200.', fn: p => { p.cash += 200; return `${p.name} ranks up — +$200`; } },
-  { text:'Kit purchase. Pay $50.', fn: p => { p.cash -= 50; return `${p.name} buys kit — -$50`; } },
-  { text:'Operation reward. Collect $100.', fn: p => { p.cash += 100; return `${p.name} gets op reward — +$100`; } },
-  { text:'Server maintenance fee. Pay $100.', fn: p => { p.cash -= 100; return `${p.name} pays server fee — -$100`; } },
-  { text:'Case drop! Collect $25.', fn: p => { p.cash += 25; return `${p.name} gets case drop — +$25`; } },
-];
+// ═══════════════ STATE ═══════════════
+const BOT_NAMES=['Viktor_BOT','Nikita_BOT','Sasha_BOT'];
+const BOT_AVS=['🤖','👾','🎮'];
+let G={};
+let chDeck=[],coDeck=[];
 
-// ═══════════════════════════════════════════
-// GAME STATE
-// ═══════════════════════════════════════════
-
-let G = {};
-
-const BOT_NAMES = ['Viktor_BOT', 'Nikita_BOT', 'Sasha_BOT'];
-const BOT_AVS   = ['🤖', '👾', '🎮'];
-
-function initGame(playerName, playerAv, numBots) {
-  const players = [{ id:0, name:playerName, av:playerAv, cash:1500, pos:0, jailTurns:0, properties:[], human:true, bust:false }];
-  for(let i = 0; i < numBots; i++) {
-    players.push({ id:i+1, name:BOT_NAMES[i], av:BOT_AVS[i], cash:1500, pos:0, jailTurns:0, properties:[], human:false, bust:false });
-  }
-
-  G = {
-    players,
-    curPlayer: 0,
-    turn: 1,
-    propOwners: {}, // spaceIndex → playerIndex
-    propHouses: {}, // spaceIndex → 0-5 (5=hotel)
-    rolling: false,
-    waitingAction: false,
-    log: [],
-    chanceIdx: 0,
-    communityIdx: 0,
-    gameOver: false,
-  };
-
-  shuffleCards();
+function initGame(name,av,nb){
+  const players=[{id:0,name,av,cash:1500,pos:0,jailTurns:0,jailCards:0,properties:[],human:true,bust:false}];
+  for(let i=0;i<nb;i++)players.push({id:i+1,name:BOT_NAMES[i],av:BOT_AVS[i],cash:1500,pos:0,jailTurns:0,jailCards:0,properties:[],human:false,bust:false});
+  G={players,cur:0,turn:1,O:{},H:{},M:{},rolling:false,waiting:false,log:[],pot:0,doubles:0,doubleRent:false,over:false};
+  chDeck=[...CHANCE].sort(()=>Math.random()-0.5);
+  coDeck=[...COMMUNITY].sort(()=>Math.random()-0.5);
+  buildRulesTab();
 }
 
-function shuffleCards() {
-  CHANCE_CARDS.sort(() => Math.random()-0.5);
-  COMMUNITY_CARDS.sort(() => Math.random()-0.5);
+// ═══════════════ NAVIGATION ═══════════════
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function showLobby(){showScreen('lobby');updateSlots();}
+function updateSlots(){
+  const name=document.getElementById('pname').value||'Player1';
+  const av=document.querySelector('.av-btn.sel')?.dataset.av||'🐺';
+  const nb=+document.getElementById('num-bots').value;
+  let h=`<div class="pslot"><span class="pslot-av">${av}</span><span class="pslot-name">${name}</span><span class="pslot-tag tag-you">YOU</span></div>`;
+  for(let i=0;i<nb;i++)h+=`<div class="pslot"><span class="pslot-av">${BOT_AVS[i]}</span><span class="pslot-name">${BOT_NAMES[i]}</span><span class="pslot-tag tag-bot">BOT</span></div>`;
+  document.getElementById('lobby-slots').innerHTML=h;
+}
+document.getElementById('avatar-grid').addEventListener('click',e=>{const b=e.target.closest('.av-btn');if(!b)return;document.querySelectorAll('.av-btn').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');updateSlots();});
+document.getElementById('pname').addEventListener('input',updateSlots);
+document.getElementById('num-bots').addEventListener('change',updateSlots);
+function startGame(){
+  const name=document.getElementById('pname').value.trim()||'Player1';
+  const av=document.querySelector('.av-btn.sel')?.dataset.av||'🐺';
+  const nb=+document.getElementById('num-bots').value;
+  initGame(name,av,nb);buildBoard();renderAll();showScreen('game');
+  addLog('Match started! Roll to move.','le-sys');
 }
 
-// ═══════════════════════════════════════════
-// SCREEN NAVIGATION
-// ═══════════════════════════════════════════
-
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+// ═══════════════ BOARD ═══════════════
+function gpos(i){
+  if(i===0)return{r:12,c:12};if(i<=9)return{r:12,c:12-i};if(i===10)return{r:12,c:1};
+  if(i<=19)return{r:12-(i-10),c:1};if(i===20)return{r:1,c:1};if(i<=29)return{r:1,c:i-19};
+  if(i===30)return{r:1,c:12};if(i<=39)return{r:i-29,c:12};
 }
+function gside(i){if([0,10,20,30].includes(i))return'corner';if(i>=1&&i<=9)return'bottom';if(i>=11&&i<=19)return'left';if(i>=21&&i<=29)return'top';return'right';}
 
-function showLobby() {
-  showScreen('lobby');
-  updateLobbySlots();
-}
-
-function updateLobbySlots() {
-  const name = document.getElementById('pname').value || 'Player1';
-  const av = document.querySelector('.av-btn.sel')?.dataset.av || '🐺';
-  const numBots = parseInt(document.getElementById('num-bots').value);
-  const slots = document.getElementById('lobby-slots');
-  let html = `<div class="pslot"><span class="pslot-av">${av}</span><span class="pslot-name">${name}</span><span class="pslot-tag tag-you">YOU</span></div>`;
-  for(let i = 0; i < numBots; i++) {
-    html += `<div class="pslot"><span class="pslot-av">${BOT_AVS[i]}</span><span class="pslot-name">${BOT_NAMES[i]}</span><span class="pslot-tag tag-bot">BOT</span></div>`;
-  }
-  slots.innerHTML = html;
-}
-
-// Avatar selection
-document.getElementById('avatar-grid').addEventListener('click', e => {
-  const btn = e.target.closest('.av-btn');
-  if(!btn) return;
-  document.querySelectorAll('.av-btn').forEach(b => b.classList.remove('sel'));
-  btn.classList.add('sel');
-  updateLobbySlots();
-});
-document.getElementById('pname').addEventListener('input', updateLobbySlots);
-document.getElementById('num-bots').addEventListener('change', updateLobbySlots);
-
-function startGame() {
-  const name = document.getElementById('pname').value.trim() || 'Player1';
-  const av   = document.querySelector('.av-btn.sel')?.dataset.av || '🐺';
-  const numBots = parseInt(document.getElementById('num-bots').value);
-  initGame(name, av, numBots);
-  buildBoard();
-  renderAll();
-  showScreen('game');
-  addLog('Match started! Roll to move.', 'le-sys');
-}
-
-// ═══════════════════════════════════════════
-// BOARD BUILDING
-// ═══════════════════════════════════════════
-
-// Grid positions for each space index
-// Row = grid-row, Col = grid-column (1-based)
-function getGridPos(i) {
-  if(i === 0)  return { r:12, c:12 };        // GO — bottom-right corner
-  if(i <= 9)   return { r:12, c:12-i };      // bottom row →left
-  if(i === 10) return { r:12, c:1 };         // JAIL — bottom-left
-  if(i <= 19)  return { r:12-(i-10), c:1 };  // left col →up
-  if(i === 20) return { r:1, c:1 };          // FREE PARK — top-left
-  if(i <= 29)  return { r:1, c:i-19 };       // top row →right
-  if(i === 30) return { r:1, c:12 };         // GO TO JAIL — top-right
-  if(i <= 39)  return { r:i-29, c:12 };      // right col →down
-}
-
-function getSide(i) {
-  if(i === 0 || i === 10 || i === 20 || i === 30) return 'corner';
-  if(i >= 1  && i <= 9)  return 'bottom';
-  if(i >= 11 && i <= 19) return 'left';
-  if(i >= 21 && i <= 29) return 'top';
-  if(i >= 31 && i <= 39) return 'right';
-}
-
-function buildBoard() {
-  const board = document.getElementById('board');
-  board.innerHTML = '';
-
-  // Place cells
-  SPACES.forEach(sp => {
-    const pos = getGridPos(sp.i);
-    const side = getSide(sp.i);
-    const el = document.createElement('div');
-    el.id = `cell-${sp.i}`;
-    el.dataset.idx = sp.i;
-    el.style.gridRow = pos.r;
-    el.style.gridColumn = pos.c;
-
-    if(side === 'corner') {
-      el.className = 'corner';
-      el.innerHTML = `<div class="corner-icon">${sp.icon}</div><div class="corner-label">${sp.name}</div>`;
-    } else {
-      el.className = `cell ${side} ${sp.type === 'tax' ? 'tax' : sp.type === 'chance' ? 'chance' : sp.type === 'community' ? 'community' : sp.type === 'utility' || sp.type === 'airport' ? 'special' : ''}`;
-      const gc = sp.group ? GROUPS[sp.group].color : 'transparent';
-      el.innerHTML = `
-        <div class="cell-color-bar" style="background:${gc}"></div>
-        <div class="cell-body">
-          <div class="cell-icon">${sp.icon}</div>
-          <div class="cell-name">${sp.name}</div>
-          ${sp.price ? `<div class="cell-price">$${sp.price}</div>` : ''}
-        </div>
-        <div class="cell-houses" id="houses-${sp.i}"></div>
-        <div class="cell-owned-bar" id="owned-${sp.i}"></div>
-      `;
+function buildBoard(){
+  const board=document.getElementById('board');board.innerHTML='';
+  SP.forEach(sp=>{
+    const pos=gpos(sp.i),side=gside(sp.i),el=document.createElement('div');
+    el.id=`cell-${sp.i}`;el.dataset.idx=sp.i;el.style.gridRow=pos.r;el.style.gridColumn=pos.c;
+    if(side==='corner'){el.className='corner';el.innerHTML=`<div class="corner-icon">${sp.icon}</div><div class="corner-label">${sp.name}</div>`;}
+    else{
+      const tc=sp.type==='tax'?'tax':sp.type==='chance'?'chance':sp.type==='community'?'community':'';
+      el.className=`cell ${side} ${tc}`;
+      const gc=sp.group?GROUPS[sp.group].color:'transparent';
+      el.innerHTML=`<div class="cell-color-bar" style="background:${gc}"></div>
+        <div class="cell-body"><div class="cell-icon">${sp.icon}</div><div class="cell-name">${sp.name}</div>${sp.price?`<div class="cell-price">$${sp.price}</div>`:''}</div>
+        <div class="cell-houses" id="ch-${sp.i}"></div><div class="cell-owned-bar" id="ob-${sp.i}"></div><div class="mortgage-x" id="mx-${sp.i}" style="display:none">✕</div>`;
     }
     board.appendChild(el);
   });
-
-  // Center
-  const center = document.createElement('div');
-  center.className = 'board-center';
-  center.style.gridColumn = '2/11';
-  center.style.gridRow = '2/11';
-  center.innerHTML = `
-    <div class="bc-logo">SITE:CONTROL</div>
-    <div class="bc-sub">// cs2 monopoly</div>
-    <div class="dice-wrap">
-      <div class="dice-row">
-        <div class="die" id="d1">?</div>
-        <div class="die" id="d2">?</div>
-      </div>
-      <button class="roll-btn" id="roll-btn" onclick="rollDice()">ROLL DICE</button>
-    </div>
-  `;
-  board.appendChild(center);
+  const ctr=document.createElement('div');ctr.className='board-center';ctr.style.cssText='grid-column:2/11;grid-row:2/11;';
+  ctr.innerHTML=`<div class="bc-logo">SITE:CONTROL</div><div class="bc-sub">// cs2 monopoly</div>
+    <div class="dice-wrap"><div class="dice-row"><div class="die" id="d1">?</div><div class="die" id="d2">?</div></div>
+    <div class="doubles-badge" id="db">⚡ DOUBLES — ROLL AGAIN</div>
+    <button class="roll-btn" id="rbtn" onclick="rollDice()">ROLL DICE</button></div>`;
+  board.appendChild(ctr);
 }
 
-// ═══════════════════════════════════════════
-// TOKEN POSITIONING
-// ═══════════════════════════════════════════
-
-function getCellRect(idx) {
-  const el = document.getElementById(`cell-${idx}`);
-  const board = document.getElementById('board');
-  if(!el || !board) return null;
-  const er = el.getBoundingClientRect();
-  const br = board.getBoundingClientRect();
-  return { x: er.left - br.left, y: er.top - br.top, w: er.width, h: er.height };
+// ═══════════════ TOKENS ═══════════════
+function crect(i){const e=document.getElementById(`cell-${i}`),b=document.getElementById('board');if(!e||!b)return null;const er=e.getBoundingClientRect(),br=b.getBoundingClientRect();return{x:er.left-br.left,y:er.top-br.top,w:er.width,h:er.height};}
+function placeTokens(){
+  document.querySelectorAll('.token').forEach(t=>t.remove());
+  const bw=document.querySelector('.board-wrap');if(!bw)return;
+  G.players.forEach((p,pi)=>{if(p.bust)return;const t=document.createElement('div');t.className='token';t.id=`tok-${pi}`;t.textContent=p.av;bw.appendChild(t);const r=crect(p.pos);if(r){const o=pi*10;t.style.left=(r.x+4+o)+'px';t.style.top=(r.y+4+o)+'px';t.style.fontSize='clamp(10px,1.3vw,16px)';}});
 }
 
-function placeTokens() {
-  // remove old tokens
-  document.querySelectorAll('.token').forEach(t => t.remove());
-  const board = document.querySelector('.board-wrap');
+// ═══════════════ RENDER ═══════════════
+function renderAll(){renderPCards();renderBoard();renderPropsTab();renderStatus();placeTokens();renderActBtns();}
 
-  G.players.forEach((p, pi) => {
-    if(p.bust) return;
-    let tok = document.getElementById(`tok-${pi}`);
-    if(!tok) {
-      tok = document.createElement('div');
-      tok.className = 'token';
-      tok.id = `tok-${pi}`;
-      board.appendChild(tok);
-    }
-    tok.textContent = p.av;
-    const r = getCellRect(p.pos);
-    if(r) {
-      const offset = pi * 10;
-      tok.style.left = (r.x + 4 + offset) + 'px';
-      tok.style.top  = (r.y + 4 + offset) + 'px';
-      tok.style.fontSize = 'clamp(10px,1.3vw,16px)';
-    }
+function renderPCards(){
+  const c=document.getElementById('player-cards');c.innerHTML='';
+  G.players.forEach((p,pi)=>{
+    const isc=pi===G.cur&&!G.over;
+    const div=document.createElement('div');div.className=`pcard${isc?' cur':''}${p.bust?' bust':''}`;
+    const dots=p.properties.map(idx=>{const s=SP[idx];const col=s.group?GROUPS[s.group].color:s.type==='airport'?'#a87cff':'#8888aa';return`<div class="pd" style="background:${G.M[idx]?'#333':col}"></div>`;}).join('');
+    div.innerHTML=`<div class="pc-row1"><div class="pc-av">${p.av}</div><div class="pc-info"><div class="pc-nm">${p.name}${p.human?' <span style="font-size:0.6rem;color:var(--cs-orange)">[YOU]</span>':''}</div><div class="pc-type">${p.human?'HUMAN':'BOT'}${p.bust?' · ELIMINATED':''}</div></div></div>
+      <div class="pc-cash">$${p.cash.toLocaleString()}</div><div class="pc-pos">${SP[p.pos].name}</div>
+      ${p.jailTurns>0?`<div class="pc-jail">👁️ SPECTATED (${p.jailTurns} turns)</div>`:''}
+      ${p.jailCards>0?`<div class="pc-jail" style="color:var(--cs-yellow)">🎴 ${p.jailCards} free card(s)</div>`:''}
+      ${dots?`<div class="pc-dots">${dots}</div>`:''}`;
+    c.appendChild(div);
   });
 }
 
-// ═══════════════════════════════════════════
-// RENDER ALL UI
-// ═══════════════════════════════════════════
-
-function renderAll() {
-  renderPlayerCards();
-  renderBoard();
-  renderPropsTab();
-  renderStatusBar();
-  placeTokens();
-  renderBuildBtn();
-}
-
-function renderPlayerCards() {
-  const container = document.getElementById('player-cards');
-  container.innerHTML = '';
-  G.players.forEach((p, pi) => {
-    const isCur = pi === G.curPlayer && !G.gameOver;
-    const div = document.createElement('div');
-    div.className = `pcard${isCur?' cur':''}${p.bust?' bust':''}`;
-    const sp = SPACES[p.pos];
-    const dots = p.properties.map(idx => {
-      const sp2 = SPACES[idx];
-      const col = sp2.group ? GROUPS[sp2.group].color : '#666';
-      return `<div class="pd" style="background:${col}"></div>`;
-    }).join('');
-    div.innerHTML = `
-      <div class="pc-row1">
-        <div class="pc-av">${p.av}</div>
-        <div class="pc-info">
-          <div class="pc-nm">${p.name}${p.human ? ' <span style="font-size:0.6rem;color:var(--cs-orange)">[YOU]</span>':''}</div>
-          <div class="pc-type">${p.human ? 'HUMAN':'BOT'}${p.bust ? ' · ELIMINATED':''}</div>
-        </div>
-      </div>
-      <div class="pc-cash">$${p.cash.toLocaleString()}</div>
-      <div class="pc-pos">${sp.name}</div>
-      ${dots ? `<div class="pc-dots">${dots}</div>`:''}
-    `;
-    container.appendChild(div);
+function renderBoard(){
+  SP.forEach(sp=>{
+    const ob=document.getElementById(`ob-${sp.i}`),ch=document.getElementById(`ch-${sp.i}`),mx=document.getElementById(`mx-${sp.i}`);if(!ob)return;
+    const owner=G.O[sp.i],mort=G.M[sp.i];
+    if(mx)mx.style.display=mort?'flex':'none';
+    const cell=document.getElementById(`cell-${sp.i}`);
+    if(cell){mort?cell.classList.add('mortgaged'):cell.classList.remove('mortgaged');}
+    ob.style.background=(owner!==undefined&&!mort)?pcolor(owner):'transparent';
+    if(ch){const h=G.H[sp.i]||0;ch.innerHTML=h===5?'<div class="hotel-dot"></div>':h>0?Array(h).fill('<div class="house-dot"></div>').join(''):'';}
   });
 }
 
-function renderBoard() {
-  // Update owned bars + houses
-  SPACES.forEach(sp => {
-    const ownedBar = document.getElementById(`owned-${sp.i}`);
-    const housesEl = document.getElementById(`houses-${sp.i}`);
-    if(!ownedBar) return;
-
-    const owner = G.propOwners[sp.i];
-    if(owner !== undefined) {
-      const p = G.players[owner];
-      ownedBar.style.background = getPlayerColor(owner);
-      ownedBar.style.opacity = '0.9';
-    } else {
-      ownedBar.style.background = 'transparent';
-    }
-
-    if(housesEl) {
-      const houses = G.propHouses[sp.i] || 0;
-      if(houses === 5) {
-        housesEl.innerHTML = `<div class="hotel-dot"></div>`;
-      } else if(houses > 0) {
-        housesEl.innerHTML = Array(houses).fill('<div class="house-dot"></div>').join('');
-      } else {
-        housesEl.innerHTML = '';
-      }
-    }
-  });
+function renderStatus(){
+  const p=G.players[G.cur];
+  document.getElementById('st-turn').textContent=G.turn;
+  document.getElementById('st-player').textContent=p?p.name:'—';
 }
 
-function renderStatusBar() {
-  const p = G.players[G.curPlayer];
-  document.getElementById('st-turn').textContent = G.turn;
-  document.getElementById('st-player').textContent = p ? p.name : '—';
-}
-
-function renderPropsTab() {
-  const tab = document.getElementById('tab-props');
-  const byGroup = {};
-  SPACES.forEach(sp => {
-    if(sp.type !== 'prop') return;
-    if(!byGroup[sp.group]) byGroup[sp.group] = [];
-    byGroup[sp.group].push(sp);
-  });
-
-  let html = '';
-  Object.entries(byGroup).forEach(([grp, props]) => {
-    const g = GROUPS[grp];
-    html += `<div class="prop-group">
-      <div class="prop-group-title" style="color:${g.color}">
-        <div style="width:8px;height:8px;border-radius:1px;background:${g.color};flex-shrink:0"></div>
-        ${g.name}
-      </div>`;
-    props.forEach(sp => {
-      const owner = G.propOwners[sp.i];
-      const houses = G.propHouses[sp.i] || 0;
-      const p = owner !== undefined ? G.players[owner] : null;
-      html += `<div class="prop-item">
-        <div class="pi-color" style="background:${g.color}"></div>
-        <div style="flex:1">
-          <div class="pi-name">${sp.name}</div>
-          <div class="pi-owner">${p ? p.av+' '+p.name : 'Available · $'+sp.price}</div>
-        </div>
-        ${houses>0 ? `<div class="pi-houses">${houses<5?'🔫x'+houses:'🏆hotel'}</div>`:''}
-      </div>`;
-    });
-    html += '</div>';
-  });
-
-  // Airports & utilities
-  html += `<div class="prop-group"><div class="prop-group-title" style="color:#a87cff">AIRPORTS & UTILITIES</div>`;
-  SPACES.filter(s => s.type==='airport'||s.type==='utility').forEach(sp => {
-    const owner = G.propOwners[sp.i];
-    const p = owner !== undefined ? G.players[owner] : null;
-    html += `<div class="prop-item">
-      <div class="pi-color" style="background:${sp.type==='airport'?'#a87cff':'#8888aa'}"></div>
-      <div style="flex:1">
-        <div class="pi-name">${sp.name}</div>
-        <div class="pi-owner">${p ? p.av+' '+p.name : 'Available · $'+sp.price}</div>
-      </div>
-    </div>`;
-  });
-  html += '</div>';
-
-  tab.innerHTML = html;
-}
-
-function renderBuildBtn() {
-  const btn = document.getElementById('build-btn');
-  const p = G.players[G.curPlayer];
-  if(!p || !p.human || G.gameOver || G.waitingAction) {
-    btn.style.display = 'none'; return;
+function renderActBtns(){
+  const btns=document.getElementById('action-btns');btns.innerHTML='';
+  if(G.over||G.waiting)return;
+  const p=G.players[G.cur];if(!p||!p.human||p.bust)return;
+  if(canBuild(G.cur))btns.innerHTML+=`<button class="act-btn ab-green" onclick="tryBuild()">🔫 BUILD WEAPON</button>`;
+  if(G.players.some((pl,i)=>i!==G.cur&&!pl.bust))btns.innerHTML+=`<button class="act-btn ab-blue" onclick="openTrade()">🤝 PROPOSE TRADE</button>`;
+  if(p.properties.some(idx=>!G.M[idx]&&(G.H[idx]||0)===0))btns.innerHTML+=`<button class="act-btn ab-orange" onclick="openMortgage()">🏦 MORTGAGE</button>`;
+  if(p.properties.some(idx=>G.M[idx]))btns.innerHTML+=`<button class="act-btn ab-teal" onclick="openUnmortgage()">🔓 UNMORTGAGE</button>`;
+  if(p.jailTurns>0){
+    if(p.jailCards>0)btns.innerHTML+=`<button class="act-btn ab-yellow" onclick="useJailCard()">🎴 USE FREE CARD</button>`;
+    if(p.cash>=50)btns.innerHTML+=`<button class="act-btn ab-yellow" onclick="payJailFine()">💰 PAY $50 BAIL</button>`;
   }
-  // Can build if owns a complete group
-  const canBuild = canPlayerBuild(G.curPlayer);
-  btn.style.display = canBuild ? 'block' : 'none';
 }
 
-function canPlayerBuild(pi) {
-  const p = G.players[pi];
-  // group → all props in that group
-  const groups = {};
-  SPACES.forEach(sp => {
-    if(sp.type !== 'prop') return;
-    if(!groups[sp.group]) groups[sp.group] = [];
-    groups[sp.group].push(sp.i);
+function renderPropsTab(){
+  const tab=document.getElementById('tab-props');const bg={};
+  SP.forEach(sp=>{if(sp.type!=='prop')return;if(!bg[sp.group])bg[sp.group]=[];bg[sp.group].push(sp);});
+  let h='';
+  Object.entries(bg).forEach(([grp,props])=>{
+    const g=GROUPS[grp];
+    h+=`<div class="prop-group"><div class="prop-group-title"><div style="width:8px;height:8px;border-radius:1px;background:${g.color};flex-shrink:0"></div>${g.name}</div>`;
+    props.forEach(sp=>{const own=G.O[sp.i];const hc=G.H[sp.i]||0;const mort=G.M[sp.i];const p=own!==undefined?G.players[own]:null;
+      h+=`<div class="prop-item"><div class="pi-color" style="background:${mort?'#333':g.color}"></div><div style="flex:1"><div class="pi-name">${sp.name}</div><div class="pi-owner">${p?p.av+' '+p.name:'Available · $'+sp.price}</div></div>${hc>0?`<div class="pi-houses">${hc<5?'🔫×'+hc:'🏆Arsenal'}</div>`:''}${mort?'<div class="pi-mort">MORTGAGED</div>':''}</div>`;
+    });h+='</div>';
   });
-  for(const [grp, idxs] of Object.entries(groups)) {
-    const allOwned = idxs.every(idx => G.propOwners[idx] === pi);
-    const canUpgrade = idxs.some(idx => (G.propHouses[idx]||0) < 5);
-    if(allOwned && canUpgrade) return true;
-  }
-  return false;
+  h+=`<div class="prop-group"><div class="prop-group-title"><div style="width:8px;height:8px;border-radius:1px;background:#a87cff;flex-shrink:0"></div>AIRPORTS & UTILITIES</div>`;
+  SP.filter(s=>s.type==='airport'||s.type==='utility').forEach(sp=>{const own=G.O[sp.i];const mort=G.M[sp.i];const p=own!==undefined?G.players[own]:null;
+    h+=`<div class="prop-item"><div class="pi-color" style="background:${mort?'#333':sp.type==='airport'?'#a87cff':'#8888aa'}"></div><div style="flex:1"><div class="pi-name">${sp.name}</div><div class="pi-owner">${p?p.av+' '+p.name:'Available · $'+sp.price}</div></div>${mort?'<div class="pi-mort">MORTGAGED</div>':''}</div>`;
+  });h+='</div>';
+  tab.innerHTML=h;
 }
 
-function getPlayerColor(pi) {
-  const colors = ['#f0a500','#4090f0','#e84040','#50c060'];
-  return colors[pi % colors.length];
+function buildRulesTab(){
+  document.getElementById('tab-rules').innerHTML=`
+    <div class="log-entry le-sys"><div class="log-time">MOVEMENT</div>Roll 2 dice and move that many spaces. Roll doubles = roll again (3 doubles = go to Spectate).</div>
+    <div class="log-entry le-move"><div class="log-time">GO</div>Collect $200 every time you pass or land on GO.</div>
+    <div class="log-entry le-buy"><div class="log-time">BUYING</div>Land on unowned property → buy it or auction it to all players.</div>
+    <div class="log-entry le-rent"><div class="log-time">RENT</div>Land on owned property → pay rent. Full map group = 2× base rent. Build weapons to increase rent.</div>
+    <div class="log-entry le-buy"><div class="log-time">WEAPONS / ARSENAL</div>Own all sites in a group → build weapons ($hcost each). Must build evenly. 4 weapons then Arsenal (hotel). Sell back for half.</div>
+    <div class="log-entry le-card"><div class="log-time">12 INTEL CARDS</div>Advance to GO, advance to airport, collect cash, repairs ($40/weapon $115/Arsenal), VAC ban, move back 3, IGL bonus & more.</div>
+    <div class="log-entry le-card"><div class="log-time">10 CHEST CARDS</div>Economy spike +$200, case drop, birthday collection, server crash, hospital fees, tax refund & more.</div>
+    <div class="log-entry le-tax"><div class="log-time">TAXES → FREE PLANT</div>Entry Fee ($200) and Eco Tax ($100) go into the Free Plant pot. Land on Free Plant = collect the whole pot!</div>
+    <div class="log-entry le-sys"><div class="log-time">SPECTATE (JAIL)</div>Sent to Spectate if: land on Go Spectate, draw VAC ban card, or roll 3 doubles. Options: use free card, pay $50 bail, or roll doubles within 3 turns.</div>
+    <div class="log-entry le-sys"><div class="log-time">AIRPORTS</div>1=$25, 2=$50, 3=$100, 4=$200. Rush B card sends you to nearest airport at double rent.</div>
+    <div class="log-entry le-sys"><div class="log-time">UTILITIES</div>Own 1=$50, own both=$100 flat rent.</div>
+    <div class="log-entry le-sys"><div class="log-time">MORTGAGE</div>Mortgage unmortgaged site (no weapons) for half its value. No rent while mortgaged. Unmortgage for 110% of value.</div>
+    <div class="log-entry le-sys"><div class="log-time">TRADING</div>Trade any combination of properties + cash between players. Both must agree (human auto-accepts bot trades).</div>
+    <div class="log-entry le-sys"><div class="log-time">AUCTION</div>When you pass on buying (or can't afford), property goes to auction. All players bid. Highest bid wins.</div>
+    <div class="log-entry le-sys"><div class="log-time">BANKRUPTCY</div>Cash < 0 → sell houses, mortgage properties. Still can't pay → eliminated. All properties return to bank.</div>`;
 }
 
-// ═══════════════════════════════════════════
-// DICE & MOVEMENT
-// ═══════════════════════════════════════════
-
-function rollDice() {
-  if(G.rolling || G.waitingAction || G.gameOver) return;
-  const p = G.players[G.curPlayer];
-  if(!p.human) return;
-  doRoll(G.curPlayer);
+// ═══════════════ DICE ═══════════════
+function rollDice(){if(G.rolling||G.waiting||G.over)return;const p=G.players[G.cur];if(!p.human)return;execRoll(G.cur);}
+function execRoll(pi){
+  if(G.rolling)return;G.rolling=true;
+  const d1e=document.getElementById('d1'),d2e=document.getElementById('d2'),rb=document.getElementById('rbtn');
+  if(rb)rb.disabled=true;[d1e,d2e].forEach(d=>d&&d.classList.add('rolling'));
+  setTimeout(()=>{
+    const d1=Math.ceil(Math.random()*6),d2=Math.ceil(Math.random()*6);
+    if(d1e){d1e.textContent=d1;d1e.classList.remove('rolling');}if(d2e){d2e.textContent=d2;d2e.classList.remove('rolling');}
+    G.rolling=false;const dbl=d1===d2;
+    const db=document.getElementById('db');if(db)db.style.display=dbl?'block':'none';
+    processRoll(pi,d1+d2,dbl);
+  },500);
 }
-
-function doRoll(pi) {
-  if(G.rolling) return;
-  G.rolling = true;
-
-  const d1el = document.getElementById('d1');
-  const d2el = document.getElementById('d2');
-  const rollBtn = document.getElementById('roll-btn');
-  if(rollBtn) rollBtn.disabled = true;
-  if(d1el) d1el.classList.add('rolling');
-  if(d2el) d2el.classList.add('rolling');
-
-  setTimeout(() => {
-    const d1 = Math.ceil(Math.random()*6);
-    const d2 = Math.ceil(Math.random()*6);
-    const diceEmoji = ['','⚀','⚁','⚂','⚃','⚄','⚅'];
-    if(d1el) { d1el.textContent = d1; d1el.classList.remove('rolling'); }
-    if(d2el) { d2el.textContent = d2; d2el.classList.remove('rolling'); }
-    G.rolling = false;
-    processMove(pi, d1+d2, d1===d2);
-  }, 500);
-}
-
-function processMove(pi, steps, doubles) {
-  const p = G.players[pi];
-
-  // Jail logic
-  if(p.jailTurns > 0) {
-    p.jailTurns--;
-    if(doubles || p.jailTurns === 0) {
-      p.jailTurns = 0;
-      addLog(`${p.name} gets out of Spectate!`, 'le-sys');
-    } else {
-      addLog(`${p.name} stays in Spectate (${p.jailTurns} turns left)`, 'le-sys');
-      endTurn(); return;
+function processRoll(pi,steps,dbl){
+  const p=G.players[pi];
+  if(p.jailTurns>0){
+    if(dbl){p.jailTurns=0;addLog(`${p.name} rolls doubles — escapes Spectate!`,'le-sys');}
+    else{
+      p.jailTurns--;
+      if(p.jailTurns===0){p.cash-=50;addLog(`${p.name} pays $50 forced bail`,'le-tax');}
+      else{addLog(`${p.name} stays in Spectate (${p.jailTurns} turns left)`,'le-sys');endTurn();return;}
     }
-  }
-
-  const oldPos = p.pos;
-  p.pos = (p.pos + steps) % 40;
-
-  // Passed GO
-  if(p.pos < oldPos && p.pos !== 0) {
-    p.cash += 200;
-    addLog(`${p.name} passed GO — +$200`, 'le-move');
-  }
-
-  addLog(`${p.name} rolled ${steps} → ${SPACES[p.pos].name}`, 'le-move');
-  placeTokens();
-  renderPlayerCards();
-
-  setTimeout(() => landOn(pi), 300);
-}
-
-function landOn(pi) {
-  const p = G.players[pi];
-  const sp = SPACES[p.pos];
-
-  if(sp.type === 'go') {
-    // collected on passing
-    addLog(`${p.name} landed on GO — +$200`, 'le-move');
-    p.cash += 200;
-    endTurn();
-
-  } else if(sp.type === 'prop' || sp.type === 'airport' || sp.type === 'utility') {
-    const owner = G.propOwners[sp.i];
-    if(owner === undefined) {
-      // Unowned — offer to buy
-      if(p.cash >= sp.price) {
-        if(p.human) {
-          showBuyModal(pi, sp.i);
-        } else {
-          // Bot always buys if it can
-          buyProperty(pi, sp.i);
-          endTurn();
-        }
-      } else {
-        addLog(`${p.name} can't afford ${sp.name}`, 'le-sys');
-        endTurn();
-      }
-    } else if(owner === pi) {
-      addLog(`${p.name} owns ${sp.name}`, 'le-sys');
-      endTurn();
-    } else {
-      // Pay rent
-      payRent(pi, owner, sp);
-      endTurn();
-    }
-
-  } else if(sp.type === 'tax') {
-    p.cash -= sp.amount;
-    addLog(`${p.name} pays entry fee: -$${sp.amount}`, 'le-tax');
-    checkBankrupt(pi);
-    endTurn();
-
-  } else if(sp.type === 'chance') {
-    const card = CHANCE_CARDS[G.chanceIdx % CHANCE_CARDS.length];
-    G.chanceIdx++;
-    const msg = card.fn(p, G);
-    addLog(`INTEL: ${card.text} → ${msg}`, 'le-card');
-    checkBankrupt(pi);
-    placeTokens();
-    if(p.human) showInfoModal('📡 INTEL CARD', card.text, msg);
-    else endTurn();
-
-  } else if(sp.type === 'community') {
-    const card = COMMUNITY_CARDS[G.communityIdx % COMMUNITY_CARDS.length];
-    G.communityIdx++;
-    const msg = card.fn(p, G);
-    addLog(`CHEST: ${card.text} → ${msg}`, 'le-card');
-    checkBankrupt(pi);
-    if(p.human) showInfoModal('📦 COMMUNITY CHEST', card.text, msg);
-    else endTurn();
-
-  } else if(sp.type === 'go2jail') {
-    p.pos = 10; p.jailTurns = 3;
-    addLog(`${p.name} sent to Spectate!`, 'le-sys');
-    placeTokens();
-    if(p.human) showInfoModal('🚔 SPECTATED', 'You\'ve been spectated!', 'Miss up to 3 turns.');
-    else endTurn();
-
-  } else if(sp.type === 'jail' || sp.type === 'freep') {
-    addLog(`${p.name} on ${sp.name}`, 'le-sys');
-    endTurn();
   } else {
-    endTurn();
+    if(dbl){G.doubles++;if(G.doubles>=3){p.pos=10;p.jailTurns=3;G.doubles=0;addLog(`${p.name} rolls 3 doubles — VAC BANNED!`,'le-sys');renderAll();endTurn();return;}}
+    else G.doubles=0;
   }
-
-  renderPlayerCards();
-  renderPropsTab();
-  renderBoard();
+  const old=p.pos;p.pos=(p.pos+steps)%40;
+  if(p.pos<old||(old===0&&p.pos===0&&steps>0)){p.cash+=200;addLog(`${p.name} passes GO — +$200`,'le-move');}
+  addLog(`${p.name} rolls ${steps}${dbl?' (doubles)':''} → ${SP[p.pos].name}`,'le-move');
+  placeTokens();renderPCards();
+  setTimeout(()=>landOn(pi,dbl),300);
 }
 
-function payRent(pi, ownerId, sp) {
-  const p     = G.players[pi];
-  const owner = G.players[ownerId];
-  let rent;
-
-  if(sp.type === 'airport') {
-    const airportsOwned = [5,15,25,35].filter(idx => G.propOwners[idx] === ownerId).length;
-    rent = 25 * Math.pow(2, airportsOwned - 1);
-  } else if(sp.type === 'utility') {
-    const utilsOwned = [12,28].filter(idx => G.propOwners[idx] === ownerId).length;
-    rent = utilsOwned === 2 ? 100 : 50;
-  } else {
-    const houses = G.propHouses[sp.i] || 0;
-    // Check if owner owns full group → base rent doubles
-    const grpSpaces = SPACES.filter(s => s.group === sp.group).map(s => s.i);
-    const fullGroup = grpSpaces.every(idx => G.propOwners[idx] === ownerId);
-    rent = houses === 0 && fullGroup ? sp.rent[0] * 2 : sp.rent[houses];
-  }
-
-  p.cash -= rent;
-  owner.cash += rent;
-  addLog(`${p.name} pays $${rent} rent to ${owner.name} at ${sp.name}`, 'le-rent');
-  checkBankrupt(pi);
-}
-
-function checkBankrupt(pi) {
-  const p = G.players[pi];
-  if(p.cash < 0) {
-    p.cash = 0; p.bust = true;
-    // Transfer properties to bank
-    p.properties.forEach(idx => {
-      delete G.propOwners[idx];
-      delete G.propHouses[idx];
-    });
-    p.properties = [];
-    addLog(`💀 ${p.name} is ELIMINATED!`, 'le-sys');
-    checkWin();
-  }
-}
-
-function checkWin() {
-  const alive = G.players.filter(p => !p.bust);
-  if(alive.length === 1) {
-    G.gameOver = true;
-    setTimeout(() => {
-      const w = alive[0];
-      document.getElementById('win-av').textContent = w.av;
-      document.getElementById('win-name').textContent = w.name.toUpperCase();
-      document.getElementById('win-cash').textContent = `Final balance: $${w.cash.toLocaleString()}`;
-      document.getElementById('endscreen').classList.add('open');
-    }, 1000);
-  }
-}
-
-// ═══════════════════════════════════════════
-// PROPERTY BUYING
-// ═══════════════════════════════════════════
-
-function buyProperty(pi, idx) {
-  const p  = G.players[pi];
-  const sp = SPACES[idx];
-  p.cash -= sp.price;
-  G.propOwners[idx] = pi;
-  p.properties.push(idx);
-  addLog(`${p.name} buys ${sp.name} for $${sp.price}`, 'le-buy');
+function landOn(pi,dbl){
+  const p=G.players[pi],sp=SP[p.pos];
+  if(sp.type==='go'){p.cash+=200;addLog(`${p.name} lands on GO — +$200`,'le-move');postLand(pi,dbl);}
+  else if(sp.type==='prop'||sp.type==='airport'||sp.type==='utility'){
+    const own=G.O[sp.i],mort=G.M[sp.i];
+    if(own===undefined){
+      if(p.cash>=sp.price){if(p.human)showBuyModal(pi,sp.i,dbl);else botBuy(pi,sp.i,dbl);}
+      else{addLog(`${p.name} can't afford ${sp.name} — AUCTION!`,'le-sys');startAuction(sp.i,pi,dbl);}
+    } else if(own===pi||mort){addLog(`${p.name}${mort?' (mortgaged)':' owns'} ${sp.name}`,'le-sys');postLand(pi,dbl);}
+    else{payRent(pi,own,sp,dbl);}
+  } else if(sp.type==='tax'){
+    p.cash-=sp.amount;G.pot+=sp.amount;addLog(`${p.name} pays $${sp.amount} ${sp.name} (pot=$${G.pot})`,'le-tax');chkBust(pi);postLand(pi,dbl);
+  } else if(sp.type==='freep'){
+    if(G.pot>0){p.cash+=G.pot;addLog(`${p.name} collects Free Plant pot — +$${G.pot}!`,'le-buy');G.pot=0;}
+    else addLog(`${p.name} on Free Plant (pot empty)`,'le-sys');
+    postLand(pi,dbl);
+  } else if(sp.type==='chance'){
+    const card=chDeck[G.chIdx=(G.chIdx||0)%chDeck.length];G.chIdx++;
+    addLog(`${p.name} draws INTEL: ${card.text}`,'le-card');
+    const res=card.fn(p,G);addLog(`→ ${res}`,'le-card');
+    chkBust(pi);placeTokens();renderPCards();
+    if(p.human)showCardModal('📡 INTEL CARD',card.icon,card.text,res,'chance',()=>checkCardLand(pi,dbl));
+    else checkCardLand(pi,dbl);
+  } else if(sp.type==='community'){
+    const card=coDeck[G.coIdx=(G.coIdx||0)%coDeck.length];G.coIdx++;
+    addLog(`${p.name} draws CHEST: ${card.text}`,'le-card');
+    const res=card.fn(p,G);addLog(`→ ${res}`,'le-card');
+    chkBust(pi);placeTokens();renderPCards();
+    if(p.human)showCardModal('📦 COMMUNITY CHEST',card.icon,card.text,res,'community',()=>checkCardLand(pi,dbl));
+    else checkCardLand(pi,dbl);
+  } else if(sp.type==='go2jail'){
+    p.pos=10;p.jailTurns=3;G.doubles=0;addLog(`${p.name} sent to Spectate!`,'le-sys');placeTokens();
+    if(p.human)showInfoModal('🚔 VAC BANNED','Sent to Spectate!','Miss up to 3 turns. Pay $50 bail, use a free card, or roll doubles.',()=>endTurn());
+    else endTurn();
+  } else {postLand(pi,dbl);}
   renderAll();
 }
 
-// ═══════════════════════════════════════════
-// MODALS
-// ═══════════════════════════════════════════
-
-function showBuyModal(pi, spaceIdx) {
-  G.waitingAction = true;
-  const sp  = SPACES[spaceIdx];
-  const gc  = sp.group ? GROUPS[sp.group].color : '#a87cff';
-  document.getElementById('m-swatch').style.background = gc;
-  document.getElementById('m-title').textContent = sp.name;
-  document.getElementById('m-sub').textContent = sp.group ? GROUPS[sp.group].name : (sp.type === 'airport' ? 'AIRPORT' : 'UTILITY');
-  document.getElementById('m-price').textContent = `Purchase Price: $${sp.price}`;
-
-  let rentInfo = '';
-  if(sp.type === 'prop') {
-    rentInfo = `Base rent: $${sp.rent[0]} · Full group: $${sp.rent[0]*2}<br>`;
-    rentInfo += `🔫 1 weapon: $${sp.rent[1]} · 2: $${sp.rent[2]} · 3: $${sp.rent[3]}<br>`;
-    rentInfo += `4 weapons: $${sp.rent[4]} · 🏆 Arsenal: $${sp.rent[5]}`;
-  } else if(sp.type === 'airport') {
-    rentInfo = `1 airport: $25 · 2: $50 · 3: $100 · 4: $200`;
-  } else {
-    rentInfo = `1 utility: $50 · Both: $100`;
-  }
-  document.getElementById('m-rent').innerHTML = rentInfo;
-
-  document.getElementById('m-btns').innerHTML = `
-    <button class="mbtn-buy" onclick="modalBuy(${pi},${spaceIdx})">BUY $${sp.price}</button>
-    <button class="mbtn-pass" onclick="modalPass()">PASS</button>
-  `;
-  document.getElementById('modal').classList.add('open');
-  renderBuildBtn();
+function checkCardLand(pi,dbl){
+  const p=G.players[pi],sp=SP[p.pos];
+  if((sp.type==='prop'||sp.type==='airport'||sp.type==='utility')&&G.O[sp.i]!==undefined&&G.O[sp.i]!==pi&&!G.M[sp.i])
+    {payRent(pi,G.O[sp.i],sp,dbl);}
+  else postLand(pi,dbl);
 }
 
-function showInfoModal(title, sub, detail) {
-  G.waitingAction = true;
-  document.getElementById('m-swatch').style.background = 'transparent';
-  document.getElementById('m-title').textContent = title;
-  document.getElementById('m-sub').textContent = sub;
-  document.getElementById('m-price').textContent = '';
-  document.getElementById('m-rent').textContent = detail;
-  document.getElementById('m-btns').innerHTML = `<button class="mbtn-ok" onclick="modalPass()">OK</button>`;
-  document.getElementById('modal').classList.add('open');
-}
-
-function modalBuy(pi, spaceIdx) {
-  closeModal();
-  buyProperty(pi, spaceIdx);
-  endTurn();
-}
-
-function modalPass() {
-  closeModal();
-  endTurn();
-}
-
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-  G.waitingAction = false;
-}
-
-// ═══════════════════════════════════════════
-// BUILD (houses / weapons)
-// ═══════════════════════════════════════════
-
-function tryBuild() {
-  const pi = G.curPlayer;
-  const p  = G.players[pi];
-  // Find first buildable property
-  const groups = {};
-  SPACES.forEach(sp => {
-    if(sp.type !== 'prop') return;
-    if(!groups[sp.group]) groups[sp.group] = [];
-    groups[sp.group].push(sp);
-  });
-
-  for(const [grp, props] of Object.entries(groups)) {
-    const allOwned = props.every(sp => G.propOwners[sp.i] === pi);
-    if(!allOwned) continue;
-    // Build evenly — find min house count
-    const minH = Math.min(...props.map(sp => G.propHouses[sp.i]||0));
-    if(minH >= 5) continue;
-    // Find a prop at min that can be built
-    const target = props.find(sp => (G.propHouses[sp.i]||0) === minH);
-    if(!target) continue;
-    const cost = Math.floor(target.price / 2);
-    if(p.cash < cost) { addLog(`Not enough cash to build! Need $${cost}`, 'le-sys'); return; }
-    p.cash -= cost;
-    G.propHouses[target.i] = minH + 1;
-    const label = minH+1 === 5 ? 'Full Arsenal' : `Weapon Tier ${minH+1}`;
-    addLog(`${p.name} builds ${label} on ${target.name} for $${cost}`, 'le-buy');
-    renderAll();
-    return;
-  }
-}
-
-// ═══════════════════════════════════════════
-// TURN MANAGEMENT
-// ═══════════════════════════════════════════
-
-function endTurn() {
-  if(G.gameOver) return;
-  G.waitingAction = false;
-
-  // advance to next non-busted player
-  let next = (G.curPlayer + 1) % G.players.length;
-  let safety = 0;
-  while(G.players[next].bust && safety < G.players.length) {
-    next = (next + 1) % G.players.length;
-    safety++;
-  }
-  if(next <= G.curPlayer) G.turn++;
-  G.curPlayer = next;
-
+function postLand(pi,dbl,wasJail){
   renderAll();
-  setMsg('Roll the dice to move');
+  if(dbl&&!wasJail&&G.players[pi].jailTurns===0){
+    setMsg(`${G.players[pi].name} rolled doubles — roll again!`);
+    if(G.players[pi].human){const rb=document.getElementById('rbtn');if(rb)rb.disabled=false;}
+    else setTimeout(()=>execRoll(pi),1000);
+  } else endTurn();
+}
 
-  const p = G.players[G.curPlayer];
-  if(!p.human && !p.bust) {
-    setTimeout(() => botTurn(G.curPlayer), 800);
-  } else {
-    const rollBtn = document.getElementById('roll-btn');
-    if(rollBtn) rollBtn.disabled = false;
+function payRent(pi,ownId,sp,dbl){
+  const p=G.players[pi],own=G.players[ownId];let rent;
+  if(sp.type==='airport'){const n=[5,15,25,35].filter(i=>G.O[i]===ownId&&!G.M[i]).length;rent=25*Math.pow(2,n-1);}
+  else if(sp.type==='utility'){const n=[12,28].filter(i=>G.O[i]===ownId&&!G.M[i]).length;rent=n===2?100:50;}
+  else{
+    const h=G.H[sp.i]||0;
+    const full=SP.filter(s=>s.group===sp.group).map(s=>s.i).every(i=>G.O[i]===ownId&&!G.M[i]);
+    rent=G.doubleRent?(G.doubleRent=false,sp.rent[h]*2):h===0&&full?sp.rent[0]*2:sp.rent[h];
   }
+  if(p.cash<rent)tryLiquidate(p,rent-p.cash);
+  const actual=Math.min(rent,p.cash);p.cash-=actual;own.cash+=actual;
+  addLog(`${p.name} pays $${actual} rent to ${own.name} at ${sp.name}`,'le-rent');
+  chkBust(pi);renderAll();postLand(pi,dbl);
 }
 
-function botTurn(pi) {
-  if(G.gameOver) return;
-  setMsg(`${G.players[pi].name} is thinking...`);
-  setTimeout(() => {
-    if(G.gameOver) return;
-    doRoll(pi);
-  }, 600);
-}
-
-function setMsg(txt) {
-  const el = document.getElementById('st-msg');
-  if(el) el.textContent = txt;
-}
-
-// ═══════════════════════════════════════════
-// LOGGING
-// ═══════════════════════════════════════════
-
-function addLog(msg, cls='le-sys') {
-  G.log.unshift({ msg, cls, t: G.turn });
-  const tab = document.getElementById('tab-log');
-  if(!tab) return;
-  const div = document.createElement('div');
-  div.className = `log-entry ${cls}`;
-  div.innerHTML = `<div class="log-time">TURN ${G.turn}</div>${msg}`;
-  tab.insertBefore(div, tab.firstChild);
-  // trim
-  while(tab.children.length > 50) tab.removeChild(tab.lastChild);
-}
-
-// ═══════════════════════════════════════════
-// TAB SWITCHING
-// ═══════════════════════════════════════════
-
-function switchTab(tab) {
-  document.querySelectorAll('.rp-tab').forEach(t => t.classList.remove('act'));
-  document.querySelectorAll('.rp-body').forEach(b => b.classList.remove('act'));
-  document.getElementById(`tab-${tab}`).classList.add('act');
-  const tabs = document.querySelectorAll('.rp-tab');
-  tabs.forEach(t => { if(t.textContent.toLowerCase().includes(tab==='log'?'match':'site')) t.classList.add('act'); });
-  // simpler: just match
-  document.querySelectorAll('.rp-tab').forEach(t => {
-    if((tab==='log' && t.textContent.includes('LOG')) || (tab==='props' && t.textContent.includes('SITE'))) t.classList.add('act');
+function tryLiquidate(p,needed){
+  let raised=0;
+  p.properties.forEach(idx=>{
+    if(raised>=needed)return;const h=G.H[idx]||0;
+    if(h>0&&h<5){const sp=SP[idx];const v=Math.floor(sp.hcost/2);G.H[idx]=h-1;p.cash+=v;raised+=v;addLog(`${p.name} sells weapon on ${sp.name} +$${v}`,'le-sys');}
   });
 }
 
-// ═══════════════════════════════════════════
-// RESIZE — reposition tokens
-// ═══════════════════════════════════════════
+// ═══════════════ AUCTION ═══════════════
+let AUC={};
+function startAuction(spIdx,skipPi,dbl){
+  const elig=G.players.filter(p=>!p.bust);
+  AUC={spIdx,skipPi,dbl,bid:0,leader:-1,passes:new Set(),elig};G.waiting=true;
+  renderAuction();
+}
+function renderAuction(){
+  const sp=SP[AUC.spIdx];const gc=sp.group?GROUPS[sp.group].color:'#a87cff';
+  mset(gc,'AUCTION: '+sp.name,'Bidding open — highest bidder wins!','','');
+  const ln=AUC.leader>=0?G.players[AUC.leader].name:'None';
+  const pl=AUC.elig.filter(p=>AUC.passes.has(p.id)).map(p=>p.name).join(', ');
+  document.getElementById('m-extra').innerHTML=`
+    <div class="auction-box"><div class="ab-title">LIVE AUCTION</div><div class="ab-bid">Bid: $${AUC.bid}</div><div class="ab-leader">Leader: ${ln}</div></div>
+    ${pl?`<div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;font-family:'Share Tech Mono',monospace">Passed: ${pl}</div>`:''}
+    <div class="auction-input"><input type="number" id="auc-in" class="num-input" value="${AUC.bid+1}" min="${AUC.bid+1}"/></div>`;
+  document.getElementById('m-btns').innerHTML=`<button class="mbtn-buy" onclick="aucBid()">BID</button><button class="mbtn-pass" onclick="aucPass()">PASS</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+function aucBid(){
+  const v=+(document.getElementById('auc-in')?.value||0);const p=G.players[G.cur];
+  if(v<=AUC.bid){alert('Bid must exceed current bid!');return;}if(v>p.cash){alert('Not enough cash!');return;}
+  AUC.bid=v;AUC.leader=G.cur;addLog(`${p.name} bids $${v}`,'le-buy');runBotBids();
+}
+function aucPass(){AUC.passes.add(G.cur);addLog(`${G.players[G.cur].name} passes auction`,'le-sys');concludeAuction();}
+function runBotBids(){
+  G.players.forEach((p,i)=>{if(p.human||p.bust||AUC.passes.has(i)||i===AUC.leader)return;const wb=p.cash>AUC.bid+5&&Math.random()>0.35;if(wb){const b=AUC.bid+Math.floor(Math.random()*20)+5;if(b<=p.cash){AUC.bid=b;AUC.leader=i;addLog(`${p.name} bids $${b}`,'le-buy');}else AUC.passes.add(i);}else AUC.passes.add(i);});
+  concludeAuction();
+}
+function concludeAuction(){
+  const alive=AUC.elig.filter(p=>!AUC.passes.has(p.id));
+  if(alive.length<=1||AUC.passes.size>=AUC.elig.length-1){
+    if(AUC.leader>=0){const w=G.players[AUC.leader];w.cash-=AUC.bid;G.O[AUC.spIdx]=AUC.leader;w.properties.push(AUC.spIdx);addLog(`${w.name} wins auction for ${SP[AUC.spIdx].name} at $${AUC.bid}`,'le-buy');}
+    else addLog(`No buyers for ${SP[AUC.spIdx].name}`,'le-sys');
+    G.waiting=false;closeModal();renderAll();postLand(AUC.skipPi,AUC.dbl);
+  } else renderAuction();
+}
 
-window.addEventListener('resize', () => { if(G && G.players) placeTokens(); });
+// ═══════════════ BUY ═══════════════
+function buyProp(pi,idx,dbl){
+  const p=G.players[pi],sp=SP[idx];p.cash-=sp.price;G.O[idx]=pi;p.properties.push(idx);
+  addLog(`${p.name} buys ${sp.name} for $${sp.price}`,'le-buy');closeModal();renderAll();postLand(pi,dbl);
+}
+function botBuy(pi,idx,dbl){
+  const p=G.players[pi],sp=SP[idx];
+  if(p.cash>=sp.price&&Math.random()>0.25)buyProp(pi,idx,dbl);else startAuction(idx,pi,dbl);
+}
 
+// ═══════════════ BUILD ═══════════════
+function canBuild(pi){
+  const grps={};SP.forEach(sp=>{if(sp.type!=='prop')return;if(!grps[sp.group])grps[sp.group]=[];grps[sp.group].push(sp.i);});
+  for(const[,idxs]of Object.entries(grps)){if(idxs.every(i=>G.O[i]===pi&&!G.M[i])&&idxs.some(i=>(G.H[i]||0)<5))return true;}return false;
+}
+function tryBuild(){
+  const pi=G.cur,p=G.players[pi];
+  const grps={};SP.forEach(sp=>{if(sp.type!=='prop')return;if(!grps[sp.group])grps[sp.group]=[];grps[sp.group].push(sp);});
+  for(const[,props]of Object.entries(grps)){
+    if(!props.every(sp=>G.O[sp.i]===pi&&!G.M[sp.i]))continue;
+    const minH=Math.min(...props.map(sp=>G.H[sp.i]||0));if(minH>=5)continue;
+    const tgt=props.find(sp=>(G.H[sp.i]||0)===minH);if(!tgt)continue;
+    if(p.cash<tgt.hcost){addLog(`Need $${tgt.hcost} to build — not enough cash`,'le-sys');return;}
+    p.cash-=tgt.hcost;G.H[tgt.i]=(G.H[tgt.i]||0)+1;
+    addLog(`${p.name} builds ${G.H[tgt.i]===5?'Arsenal':'Weapon Tier '+G.H[tgt.i]} on ${tgt.name} ($${tgt.hcost})`,'le-buy');
+    renderAll();return;
+  }
+}
+function botBuild(pi){
+  const p=G.players[pi];
+  const grps={};SP.forEach(sp=>{if(sp.type!=='prop')return;if(!grps[sp.group])grps[sp.group]=[];grps[sp.group].push(sp);});
+  for(const[,props]of Object.entries(grps)){
+    if(!props.every(sp=>G.O[sp.i]===pi&&!G.M[sp.i]))continue;
+    const minH=Math.min(...props.map(sp=>G.H[sp.i]||0));if(minH>=5)continue;
+    const tgt=props.find(sp=>(G.H[sp.i]||0)===minH);if(!tgt)continue;
+    if(p.cash>=tgt.hcost*2){p.cash-=tgt.hcost;G.H[tgt.i]=(G.H[tgt.i]||0)+1;addLog(`${p.name} builds ${G.H[tgt.i]===5?'Arsenal':'Weapon Tier '+G.H[tgt.i]} on ${tgt.name}`,'le-buy');}
+  }
+}
+
+// ═══════════════ MORTGAGE ═══════════════
+function openMortgage(){
+  G.waiting=true;const pi=G.cur,p=G.players[pi];
+  const elig=p.properties.filter(i=>!G.M[i]&&(G.H[i]||0)===0);
+  mset('transparent','MORTGAGE SITE','Receive half the site value. No rent collected while mortgaged.','','Sell all weapons on a site first before mortgaging.');
+  let h='<div class="trade-section"><label>Choose Site</label><div class="trade-props">';
+  elig.forEach(i=>{const sp=SP[i];h+=`<button class="trade-prop-btn" onclick="doMortgage(${i})">${sp.name} +$${Math.floor(sp.price/2)}</button>`;});
+  if(!elig.length)h+='<span style="color:var(--muted);font-size:0.82rem">No eligible sites (sell weapons first)</span>';
+  h+='</div></div>';
+  document.getElementById('m-extra').innerHTML=h;
+  document.getElementById('m-btns').innerHTML=`<button class="mbtn-pass" onclick="cancelModal()">CANCEL</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+function doMortgage(i){const p=G.players[G.cur],sp=SP[i],v=Math.floor(sp.price/2);G.M[i]=true;p.cash+=v;addLog(`${p.name} mortgages ${sp.name} +$${v}`,'le-sys');cancelModal();}
+function openUnmortgage(){
+  G.waiting=true;const pi=G.cur,p=G.players[pi];
+  const elig=p.properties.filter(i=>G.M[i]);
+  mset('transparent','UNMORTGAGE','Pay 110% of mortgage value to lift mortgage.','','');
+  let h='<div class="trade-section"><label>Choose Site</label><div class="trade-props">';
+  elig.forEach(i=>{const sp=SP[i];const cost=Math.ceil(sp.price/2*1.1);h+=`<button class="trade-prop-btn" ${p.cash<cost?'disabled style="opacity:0.4"':''} onclick="doUnmortgage(${i})">${sp.name} -$${cost}</button>`;});
+  h+='</div></div>';
+  document.getElementById('m-extra').innerHTML=h;
+  document.getElementById('m-btns').innerHTML=`<button class="mbtn-pass" onclick="cancelModal()">CANCEL</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+function doUnmortgage(i){const p=G.players[G.cur],sp=SP[i],cost=Math.ceil(sp.price/2*1.1);if(p.cash<cost){alert('Not enough!');return;}delete G.M[i];p.cash-=cost;addLog(`${p.name} unmortgages ${sp.name} -$${cost}`,'le-buy');cancelModal();}
+
+// ═══════════════ JAIL ═══════════════
+function useJailCard(){const p=G.players[G.cur];if(p.jailCards>0&&p.jailTurns>0){p.jailCards--;p.jailTurns=0;addLog(`${p.name} uses Get Out of Spectate Free card`,'le-card');renderAll();}}
+function payJailFine(){const p=G.players[G.cur];if(p.cash>=50&&p.jailTurns>0){p.cash-=50;p.jailTurns=0;addLog(`${p.name} pays $50 bail`,'le-tax');renderAll();}}
+
+// ═══════════════ TRADE ═══════════════
+let TR={};
+function openTrade(){
+  G.waiting=true;const pi=G.cur,p=G.players[pi];
+  const targets=G.players.filter((_,i)=>i!==pi&&!G.players[i].bust);
+  TR={offer:[],want:[],oCash:0,wCash:0,tid:targets[0]?.id};
+  mset('transparent','PROPOSE TRADE','Exchange properties and cash with another player.','','');
+  let h=`<div class="trade-section"><label>Trade with</label>
+    <select class="sel-input" id="tr-tgt" onchange="TR.tid=+this.value;renderTradeBody()">
+    ${targets.map(t=>`<option value="${t.id}">${t.av} ${t.name}</option>`).join('')}</select></div>
+    <div id="tr-body"></div>
+    <div class="trade-section"><label>You offer cash</label><input type="number" class="num-input" id="tr-oc" value="0" min="0" max="${p.cash}" oninput="TR.oCash=+this.value||0"/></div>
+    <div class="trade-section"><label>You request cash</label><input type="number" class="num-input" id="tr-wc" value="0" min="0" oninput="TR.wCash=+this.value||0"/></div>`;
+  document.getElementById('m-extra').innerHTML=h;
+  document.getElementById('m-btns').innerHTML=`<button class="mbtn-buy" onclick="execTrade()">SEND OFFER</button><button class="mbtn-pass" onclick="cancelModal()">CANCEL</button>`;
+  document.getElementById('modal').classList.add('open');
+  renderTradeBody();
+}
+function renderTradeBody(){
+  const pi=G.cur,p=G.players[pi],tgt=G.players[TR.tid];if(!tgt)return;
+  let h=`<div class="trade-section"><label>Your sites to offer</label><div class="trade-props">`;
+  p.properties.forEach(i=>{const sp=SP[i];h+=`<button class="trade-prop-btn${TR.offer.includes(i)?' sel':''}" onclick="togTrade('o',${i})">${sp.name}</button>`;});
+  h+=`</div></div><div class="trade-section"><label>Request from ${tgt.name}</label><div class="trade-props">`;
+  tgt.properties.forEach(i=>{const sp=SP[i];h+=`<button class="trade-prop-btn${TR.want.includes(i)?' sel':''}" onclick="togTrade('w',${i})">${sp.name}</button>`;});
+  h+='</div></div>';document.getElementById('tr-body').innerHTML=h;
+}
+function togTrade(side,i){const arr=side==='o'?TR.offer:TR.want;const p=arr.indexOf(i);p>=0?arr.splice(p,1):arr.push(i);renderTradeBody();}
+function execTrade(){
+  const pi=G.cur,p=G.players[pi],tgt=G.players[TR.tid];
+  if(TR.oCash>p.cash){alert('Not enough cash to offer!');return;}if(TR.wCash>tgt.cash){alert("Target doesn't have that much!");return;}
+  TR.offer.forEach(i=>{G.O[i]=TR.tid;p.properties=p.properties.filter(x=>x!==i);tgt.properties.push(i);});
+  TR.want.forEach(i=>{G.O[i]=pi;tgt.properties=tgt.properties.filter(x=>x!==i);p.properties.push(i);});
+  p.cash-=TR.oCash;tgt.cash+=TR.oCash;p.cash+=TR.wCash;tgt.cash-=TR.wCash;
+  const gave=[...TR.offer.map(i=>SP[i].name),...(TR.oCash?['$'+TR.oCash]:[])].join(',')||'nothing';
+  const got=[...TR.want.map(i=>SP[i].name),...(TR.wCash?['$'+TR.wCash]:[])].join(',')||'nothing';
+  addLog(`TRADE: ${p.name} → [${gave}] ↔ [${got}] ← ${tgt.name}`,'le-buy');
+  cancelModal();renderAll();
+}
+
+// ═══════════════ MODALS ═══════════════
+function mset(sw,title,sub,price,rent){
+  document.getElementById('m-swatch').style.background=sw;
+  document.getElementById('m-title').textContent=title;
+  document.getElementById('m-sub').textContent=sub;
+  document.getElementById('m-price').textContent=price;
+  document.getElementById('m-rent').innerHTML=rent;
+  document.getElementById('m-card-display').innerHTML='';
+  document.getElementById('m-extra').innerHTML='';
+  document.getElementById('m-btns').innerHTML='';
+}
+function showBuyModal(pi,idx,dbl){
+  G.waiting=true;const sp=SP[idx];const gc=sp.group?GROUPS[sp.group].color:'#a87cff';
+  let ri='';
+  if(sp.type==='prop'){ri=`Base: $${sp.rent[0]} &nbsp; Full group: $${sp.rent[0]*2}<br>🔫 T1: $${sp.rent[1]} T2: $${sp.rent[2]} T3: $${sp.rent[3]} T4: $${sp.rent[4]}<br>🏆 Arsenal: $${sp.rent[5]} &nbsp; Build cost: $${sp.hcost}`;}
+  else if(sp.type==='airport')ri='1=$25 · 2=$50 · 3=$100 · 4=$200';else ri='1=$50 · Both=$100';
+  mset(gc,sp.name,sp.group?GROUPS[sp.group].name:(sp.type==='airport'?'AIRPORT':'UTILITY'),`Purchase: $${sp.price}`,ri);
+  document.getElementById('m-btns').innerHTML=`<button class="mbtn-buy" onclick="buyProp(${pi},${idx},${dbl})">BUY $${sp.price}</button><button class="mbtn-auction" onclick="closeModal();G.waiting=false;startAuction(${idx},${pi},${dbl})">AUCTION</button><button class="mbtn-pass" onclick="closeModal();G.waiting=false;postLand(${pi},${dbl})">PASS</button>`;
+  document.getElementById('modal').classList.add('open');
+}
+function showCardModal(title,icon,text,res,type,cb){
+  G.waiting=true;mset('transparent',title,'','','');
+  const cls=type==='community'?'cc':'';
+  document.getElementById('m-card-display').innerHTML=`<div class="card-display ${cls}"><div class="cd-type">${type==='community'?'// COMMUNITY CHEST':'// INTEL CARD'}</div><div class="cd-icon">${icon}</div><div class="cd-text">${text}</div></div>`;
+  document.getElementById('m-rent').textContent='Result: '+res;
+  document.getElementById('m-btns').innerHTML=`<button class="mbtn-ok" onclick="cardOk()">OK</button>`;
+  window._ccb=cb;document.getElementById('modal').classList.add('open');
+}
+function cardOk(){closeModal();G.waiting=false;if(window._ccb){window._ccb();window._ccb=null;}}
+function showInfoModal(title,sub,detail,cb){
+  G.waiting=true;mset('transparent',title,sub,'',detail);
+  document.getElementById('m-btns').innerHTML=`<button class="mbtn-ok" onclick="infoOk()">OK</button>`;
+  window._icb=cb;document.getElementById('modal').classList.add('open');
+}
+function infoOk(){closeModal();G.waiting=false;if(window._icb){window._icb();window._icb=null;}}
+function cancelModal(){closeModal();G.waiting=false;renderAll();}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+
+// ═══════════════ BANKRUPTCY / WIN ═══════════════
+function chkBust(pi){
+  const p=G.players[pi];if(p.cash<0){
+    p.cash=0;p.bust=true;
+    p.properties.forEach(i=>{delete G.O[i];delete G.H[i];delete G.M[i];});p.properties=[];
+    addLog(`💀 ${p.name} ELIMINATED`,'le-sys');checkWin();
+  }
+}
+function checkWin(){
+  const alive=G.players.filter(p=>!p.bust);
+  if(alive.length===1){G.over=true;setTimeout(()=>{const w=alive[0];document.getElementById('win-av').textContent=w.av;document.getElementById('win-name').textContent=w.name.toUpperCase();const tv=w.properties.reduce((s,i)=>{const sp=SP[i];return s+sp.price+(G.H[i]||0)*sp.hcost;},0);document.getElementById('win-stats').textContent=`$${w.cash.toLocaleString()} cash · ${w.properties.length} sites · ~$${tv.toLocaleString()} assets`;document.getElementById('endscreen').classList.add('open');},1200);}
+}
+
+// ═══════════════ TURN ═══════════════
+function endTurn(){
+  if(G.over)return;G.waiting=false;G.doubles=0;
+  let next=(G.cur+1)%G.players.length,s=0;
+  while(G.players[next].bust&&s<G.players.length){next=(next+1)%G.players.length;s++;}
+  if(next<=G.cur)G.turn++;G.cur=next;
+  renderAll();setMsg('Roll the dice to move');
+  const rb=document.getElementById('rbtn'),p=G.players[G.cur];
+  if(!p.human&&!p.bust){if(rb)rb.disabled=true;setTimeout(()=>botTurn(G.cur),800);}
+  else if(rb)rb.disabled=false;
+}
+function botTurn(pi){if(G.over)return;const p=G.players[pi];if(p.bust)return;setMsg(`${p.name} is planning...`);botBuild(pi);setTimeout(()=>{if(!G.over)execRoll(pi);},600);}
+function setMsg(t){const e=document.getElementById('st-msg');if(e)e.textContent=t;}
+
+// ═══════════════ LOG ═══════════════
+function addLog(msg,cls='le-sys'){
+  const tab=document.getElementById('tab-log');if(!tab)return;
+  const d=document.createElement('div');d.className=`log-entry ${cls}`;d.innerHTML=`<div class="log-time">TURN ${G.turn}</div>${msg}`;
+  tab.insertBefore(d,tab.firstChild);while(tab.children.length>80)tab.removeChild(tab.lastChild);
+}
+
+// ═══════════════ TABS / UTILS ═══════════════
+function switchTab(t){['log','props','rules'].forEach(id=>{document.getElementById(`tab-${id}`).classList.remove('act');document.getElementById(`tab-btn-${id}`).classList.remove('act');});document.getElementById(`tab-${t}`).classList.add('act');document.getElementById(`tab-btn-${t}`).classList.add('act');}
+function pcolor(pi){return['#f0a500','#4090f0','#e84040','#50c060'][pi%4];}
+window.addEventListener('resize',()=>{if(G&&G.players)placeTokens();});
 </script>
 </body>
 </html>
