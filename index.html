@@ -1,89 +1,1031 @@
-<!-- ========== LOBBY SCREEN ========== -->
-<div id="lobbyScreen">
-    <header class="main-header">
-        <h1 class="logo glitch" data-text="CS2 BOARD">CS2 BOARD</h1>
-        <p class="tagline">Counter-Strike 2 &bull; Monopoly Style</p>
-    </header>
-    <main class="lobby-container">
-        <div class="glass-panel menu-panel">
-            <h2 class="panel-title neon-text">NEW MATCH</h2>
-            <div class="form-group">
-                <label>Players (2-4)</label>
-                <div class="range-row">
-                    <input type="range" id="playerCount" min="2" max="4" value="2" oninput="updateSetup()">
-                    <span id="playerCountVal" class="range-value">2</span>
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
+import {
+  Coins,
+  Dice1,
+  Dice2,
+  Dice3,
+  Dice4,
+  Dice5,
+  Dice6,
+  Trophy,
+  Shield,
+  House,
+  RotateCw,
+  Zap,
+  Lock,
+  Volume2,
+  VolumeX,
+  Package,
+  Users,
+  ArrowRightLeft,
+  ShoppingBag,
+  Swords,
+  Crown,
+  Radio,
+  Sparkles,
+} from "lucide-react";
+
+const START_CASH = 1500;
+const PASS_START_BONUS = 200;
+const JAIL_INDEX = 10;
+const GO_TO_JAIL_INDEX = 30;
+const BOT_ACTION_DELAY = 900;
+
+const board = [
+  { id: 0, type: "start", name: "T Spawn", subtitle: "Collect $200", color: "from-emerald-500 to-green-700" },
+  { id: 1, type: "property", name: "Dust II Mid", set: "Dust II", price: 60, rent: 10, houseCost: 50, tier: 1, color: "from-amber-300 to-amber-600" },
+  { id: 2, type: "case", name: "Case Drop", subtitle: "Open reward card", color: "from-fuchsia-400 to-violet-700" },
+  { id: 3, type: "property", name: "Dust II Long", set: "Dust II", price: 60, rent: 12, houseCost: 50, tier: 1, color: "from-amber-300 to-amber-600" },
+  { id: 4, type: "tax", name: "Armor Repair", amount: 100, color: "from-rose-400 to-rose-700" },
+  { id: 5, type: "rail", name: "Rotation Van", price: 200, rent: 25, color: "from-slate-400 to-slate-700" },
+  { id: 6, type: "property", name: "Mirage A Ramp", set: "Mirage", price: 100, rent: 18, houseCost: 50, tier: 1, color: "from-sky-300 to-sky-600" },
+  { id: 7, type: "case", name: "Sticker Capsule", subtitle: "Open reward card", color: "from-fuchsia-400 to-violet-700" },
+  { id: 8, type: "property", name: "Mirage Palace", set: "Mirage", price: 100, rent: 20, houseCost: 50, tier: 1, color: "from-sky-300 to-sky-600" },
+  { id: 9, type: "property", name: "Mirage Window", set: "Mirage", price: 120, rent: 22, houseCost: 50, tier: 1, color: "from-sky-300 to-sky-600" },
+  { id: 10, type: "jail", name: "Cooldown", subtitle: "Miss one turn", color: "from-orange-400 to-orange-700" },
+  { id: 11, type: "property", name: "Inferno Banana", set: "Inferno", price: 140, rent: 24, houseCost: 100, tier: 2, color: "from-red-300 to-red-700" },
+  { id: 12, type: "utility", name: "FACEIT Servers", price: 150, rent: 35, color: "from-cyan-300 to-cyan-700" },
+  { id: 13, type: "property", name: "Inferno Apartments", set: "Inferno", price: 140, rent: 24, houseCost: 100, tier: 2, color: "from-red-300 to-red-700" },
+  { id: 14, type: "property", name: "Inferno B Site", set: "Inferno", price: 160, rent: 28, houseCost: 100, tier: 2, color: "from-red-300 to-red-700" },
+  { id: 15, type: "rail", name: "Rotation Arch", price: 200, rent: 25, color: "from-slate-400 to-slate-700" },
+  { id: 16, type: "property", name: "Nuke Silo", set: "Nuke", price: 180, rent: 30, houseCost: 100, tier: 2, color: "from-lime-300 to-lime-700" },
+  { id: 17, type: "case", name: "Bonus Round", subtitle: "Open reward card", color: "from-fuchsia-400 to-violet-700" },
+  { id: 18, type: "property", name: "Nuke Hut", set: "Nuke", price: 180, rent: 30, houseCost: 100, tier: 2, color: "from-lime-300 to-lime-700" },
+  { id: 19, type: "property", name: "Nuke Heaven", set: "Nuke", price: 200, rent: 35, houseCost: 100, tier: 2, color: "from-lime-300 to-lime-700" },
+  { id: 20, type: "free", name: "Tactical Timeout", subtitle: "Safe zone", color: "from-teal-300 to-teal-700" },
+  { id: 21, type: "property", name: "Ancient Donut", set: "Ancient", price: 220, rent: 38, houseCost: 150, tier: 3, color: "from-green-400 to-green-800" },
+  { id: 22, type: "case", name: "MVP Bonus", subtitle: "Open reward card", color: "from-fuchsia-400 to-violet-700" },
+  { id: 23, type: "property", name: "Ancient Cave", set: "Ancient", price: 220, rent: 38, houseCost: 150, tier: 3, color: "from-green-400 to-green-800" },
+  { id: 24, type: "property", name: "Ancient A Main", set: "Ancient", price: 240, rent: 42, houseCost: 150, tier: 3, color: "from-green-400 to-green-800" },
+  { id: 25, type: "rail", name: "Rotation Temple", price: 200, rent: 25, color: "from-slate-400 to-slate-700" },
+  { id: 26, type: "property", name: "Anubis Mid", set: "Anubis", price: 260, rent: 46, houseCost: 150, tier: 3, color: "from-yellow-300 to-yellow-700" },
+  { id: 27, type: "property", name: "Anubis Canal", set: "Anubis", price: 260, rent: 46, houseCost: 150, tier: 3, color: "from-yellow-300 to-yellow-700" },
+  { id: 28, type: "utility", name: "Premier Servers", price: 150, rent: 35, color: "from-cyan-300 to-cyan-700" },
+  { id: 29, type: "property", name: "Anubis B Main", set: "Anubis", price: 280, rent: 50, houseCost: 150, tier: 3, color: "from-yellow-300 to-yellow-700" },
+  { id: 30, type: "gotojail", name: "VAC Review", subtitle: "Go to cooldown", color: "from-rose-500 to-red-900" },
+  { id: 31, type: "property", name: "Overpass Connector", set: "Overpass", price: 300, rent: 55, houseCost: 200, tier: 4, color: "from-indigo-300 to-indigo-700" },
+  { id: 32, type: "property", name: "Overpass Monster", set: "Overpass", price: 300, rent: 55, houseCost: 200, tier: 4, color: "from-indigo-300 to-indigo-700" },
+  { id: 33, type: "case", name: "Pick'Em Reward", subtitle: "Open reward card", color: "from-fuchsia-400 to-violet-700" },
+  { id: 34, type: "property", name: "Overpass A Site", set: "Overpass", price: 320, rent: 60, houseCost: 200, tier: 4, color: "from-indigo-300 to-indigo-700" },
+  { id: 35, type: "rail", name: "Rotation Heaven", price: 200, rent: 25, color: "from-slate-400 to-slate-700" },
+  { id: 36, type: "case", name: "Souvenir Package", subtitle: "Open reward card", color: "from-fuchsia-400 to-violet-700" },
+  { id: 37, type: "property", name: "Train Ivy", set: "Train", price: 350, rent: 70, houseCost: 200, tier: 5, color: "from-purple-300 to-purple-700" },
+  { id: 38, type: "tax", name: "Full Utility Buy", amount: 150, color: "from-rose-400 to-rose-700" },
+  { id: 39, type: "property", name: "Train Popdog", set: "Train", price: 400, rent: 85, houseCost: 200, tier: 5, color: "from-purple-300 to-purple-700" },
+];
+
+const setTotals = board.reduce((acc, tile) => {
+  if (tile.set) acc[tile.set] = (acc[tile.set] || 0) + 1;
+  return acc;
+}, {});
+
+const skinPool = [
+  { name: "AK-47 | Redline", value: 110, rarity: "Classified" },
+  { name: "AWP | Asiimov", value: 180, rarity: "Covert" },
+  { name: "M4A4 | Neo-Noir", value: 95, rarity: "Classified" },
+  { name: "USP-S | Kill Confirmed", value: 130, rarity: "Covert" },
+  { name: "Glock-18 | Vogue", value: 60, rarity: "Restricted" },
+  { name: "Desert Eagle | Printstream", value: 150, rarity: "Covert" },
+  { name: "MP9 | Starlight Protector", value: 80, rarity: "Classified" },
+  { name: "P250 | See Ya Later", value: 55, rarity: "Restricted" },
+  { name: "MAC-10 | Neon Rider", value: 75, rarity: "Classified" },
+  { name: "Knife | Lore Replica", value: 250, rarity: "Legendary" },
+];
+
+const caseCards = [
+  { text: "You won pistol round. Collect $150.", type: "cash", amount: 150 },
+  { text: "Lost the anti-eco. Pay $100.", type: "cash", amount: -100 },
+  { text: "You were the MVP. Collect $220.", type: "cash", amount: 220 },
+  { text: "Team flash disaster. Move back 3 spaces.", type: "move", amount: -3 },
+  { text: "Org sponsorship bonus. Collect $250.", type: "cash", amount: 250 },
+  { text: "Whiffed an easy spray. Pay $75.", type: "cash", amount: -75 },
+  { text: "Dropped a rare skin. Gain inventory loot.", type: "skin" },
+  { text: "Fast rotate. Advance to nearest rotation tile.", type: "nearestRail" },
+];
+
+const makePlayer = (id, name, badge, color, isBot = false) => ({
+  id,
+  name,
+  badge,
+  color,
+  isBot,
+  cash: START_CASH,
+  position: 0,
+  properties: [],
+  skins: [],
+  inJail: false,
+  jailTurns: 0,
+  eliminated: false,
+  laps: 0,
+});
+
+const defaultPlayers = [
+  makePlayer(1, "You", "CT", "bg-blue-500"),
+  makePlayer(2, "NiKo Bot", "R", "bg-orange-500", true),
+  makePlayer(3, "s1mple Bot", "A", "bg-emerald-500", true),
+  makePlayer(4, "ropz Bot", "L", "bg-pink-500", true),
+];
+
+const diceIcons = [Dice1, Dice2, Dice3, Dice4, Dice5, Dice6];
+
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function rollDice() {
+  return [rand(1, 6), rand(1, 6)];
+}
+
+function getOwners(players) {
+  const map = {};
+  players.forEach((p) => p.properties.forEach((prop) => (map[prop.tileId] = { playerId: p.id, houses: prop.houses || 0 })));
+  return map;
+}
+
+function getPlayer(players, id) {
+  return players.find((p) => p.id === id);
+}
+
+function getSetCount(player, setName) {
+  return player.properties.filter((prop) => board[prop.tileId]?.set === setName).length;
+}
+
+function getRailCount(player) {
+  return player.properties.filter((prop) => board[prop.tileId]?.type === "rail").length;
+}
+
+function getUtilityCount(player) {
+  return player.properties.filter((prop) => board[prop.tileId]?.type === "utility").length;
+}
+
+function calcRent(tile, owner, players, houses = 0) {
+  if (!tile || !owner) return 0;
+  if (tile.type === "rail") return 25 * Math.max(1, getRailCount(owner));
+  if (tile.type === "utility") return 35 * Math.max(1, getUtilityCount(owner));
+  let rent = tile.rent || 0;
+  if (tile.set && getSetCount(owner, tile.set) === setTotals[tile.set]) rent *= 2;
+  rent += houses * Math.round((tile.rent || 0) * 0.85);
+  return rent;
+}
+
+function getNetWorth(player) {
+  const props = player.properties.reduce((sum, p) => sum + ((board[p.tileId]?.price || 0) + (p.houses || 0) * ((board[p.tileId]?.houseCost || 0))), 0);
+  const skins = player.skins.reduce((sum, s) => sum + s.value, 0);
+  return player.cash + props + skins;
+}
+
+function prettyTileType(type) {
+  return {
+    start: "Spawn",
+    property: "Property",
+    rail: "Rotation",
+    utility: "Server",
+    jail: "Cooldown",
+    gotojail: "Penalty",
+    tax: "Expense",
+    free: "Safe",
+    case: "Drop",
+  }[type] || type;
+}
+
+function getBoardCoordinates() {
+  const coords = [];
+  const s = 10;
+  for (let i = 0; i < s; i += 1) coords.push({ row: s - 1, col: s - 1 - i });
+  for (let i = 1; i < s; i += 1) coords.push({ row: s - 1 - i, col: 0 });
+  for (let i = 1; i < s; i += 1) coords.push({ row: 0, col: i });
+  for (let i = 1; i < s - 1; i += 1) coords.push({ row: i, col: s - 1 });
+  return coords;
+}
+
+const boardCoords = getBoardCoordinates();
+
+function createTradeOffer(from, to, fromCash, toCash, fromTileIds, toTileIds, fromSkins, toSkins) {
+  return {
+    id: crypto.randomUUID(),
+    from,
+    to,
+    fromCash,
+    toCash,
+    fromTileIds,
+    toTileIds,
+    fromSkins,
+    toSkins,
+  };
+}
+
+export default function CS2RichupSite() {
+  const [players, setPlayers] = useState(defaultPlayers);
+  const [turn, setTurn] = useState(0);
+  const [selectedTile, setSelectedTile] = useState(0);
+  const [log, setLog] = useState(["Match started. Everyone loaded in with $1500."]);
+  const [lastRoll, setLastRoll] = useState([1, 1]);
+  const [gameOver, setGameOver] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const [lobbyCode, setLobbyCode] = useState("CS2-2026");
+  const [roomName, setRoomName] = useState("Premier Lobby");
+  const [tradeTarget, setTradeTarget] = useState(1);
+  const [tradeCashOffered, setTradeCashOffered] = useState(0);
+  const [tradeCashRequested, setTradeCashRequested] = useState(0);
+  const [selectedOfferTiles, setSelectedOfferTiles] = useState([]);
+  const [selectedRequestTiles, setSelectedRequestTiles] = useState([]);
+  const [selectedOfferSkins, setSelectedOfferSkins] = useState([]);
+  const [selectedRequestSkins, setSelectedRequestSkins] = useState([]);
+  const [trades, setTrades] = useState([]);
+  const [marketOpen, setMarketOpen] = useState(true);
+  const [buyInSkinsOnly, setBuyInSkinsOnly] = useState(false);
+  const [volume, setVolume] = useState([60]);
+  const timeoutRef = useRef(null);
+
+  const currentPlayer = players[turn];
+  const owners = useMemo(() => getOwners(players), [players]);
+  const alivePlayers = players.filter((p) => !p.eliminated);
+  const winner = alivePlayers.length === 1 ? alivePlayers[0] : null;
+  const currentTile = board[selectedTile];
+  const DiceA = diceIcons[lastRoll[0] - 1];
+  const DiceB = diceIcons[lastRoll[1] - 1];
+
+  function playBeep(kind = "move") {
+    if (!soundOn) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      const level = (volume[0] || 60) / 100;
+      const presets = {
+        move: [520, 0.06],
+        buy: [740, 0.1],
+        cash: [880, 0.12],
+        bad: [230, 0.14],
+        win: [980, 0.2],
+      };
+      const [freq, dur] = presets[kind] || presets.move;
+      osc.frequency.value = freq;
+      gain.gain.value = 0.02 * level;
+      osc.start();
+      osc.stop(ctx.currentTime + dur);
+    } catch {}
+  }
+
+  function pushLog(text) {
+    setLog((prev) => [text, ...prev].slice(0, 18));
+  }
+
+  function setAndCheck(nextPlayers) {
+    const cleaned = nextPlayers.map((p) => {
+      if (p.cash < 0 && p.properties.length === 0 && p.skins.length === 0) return { ...p, cash: 0, eliminated: true };
+      return p;
+    });
+    setPlayers(cleaned);
+    const alive = cleaned.filter((p) => !p.eliminated);
+    if (alive.length === 1) {
+      setGameOver(true);
+      playBeep("win");
+      pushLog(`${alive[0].name} won the Major economy war.`);
+    }
+  }
+
+  function nextTurn(fromIndex = turn, sourcePlayers = players) {
+    for (let i = 1; i <= sourcePlayers.length; i += 1) {
+      const idx = (fromIndex + i) % sourcePlayers.length;
+      if (!sourcePlayers[idx].eliminated) {
+        setTurn(idx);
+        return idx;
+      }
+    }
+    return fromIndex;
+  }
+
+  function nearestTileIndex(from, type) {
+    for (let i = 1; i < board.length; i += 1) {
+      const idx = (from + i) % board.length;
+      if (board[idx].type === type) return idx;
+    }
+    return from;
+  }
+
+  function grantSkin() {
+    const skin = { ...skinPool[rand(0, skinPool.length - 1)], id: crypto.randomUUID() };
+    return skin;
+  }
+
+  function movePlayer(playersState, playerIndex, steps) {
+    const p = { ...playersState[playerIndex] };
+    const oldPos = p.position;
+    let pos = (p.position + steps) % board.length;
+    if (pos < 0) pos += board.length;
+    if (steps > 0 && oldPos + steps >= board.length) {
+      p.cash += PASS_START_BONUS;
+      p.laps += 1;
+      pushLog(`${p.name} passed T Spawn and collected $${PASS_START_BONUS}.`);
+      playBeep("cash");
+    }
+    p.position = pos;
+    playersState[playerIndex] = p;
+    return playersState;
+  }
+
+  function applyLandEffect(playersState, playerIndex, landingTileId, forceBuy = true) {
+    const tile = board[landingTileId];
+    const p = { ...playersState[playerIndex] };
+    const ownerInfo = owners[landingTileId];
+    if (tile.type === "start" || tile.type === "free") return playersState;
+
+    if (tile.type === "tax") {
+      p.cash -= tile.amount;
+      playersState[playerIndex] = p;
+      pushLog(`${p.name} paid $${tile.amount} for ${tile.name}.`);
+      playBeep("bad");
+      return playersState;
+    }
+
+    if (tile.type === "jail") {
+      p.inJail = true;
+      p.jailTurns = 1;
+      playersState[playerIndex] = p;
+      pushLog(`${p.name} is cooling down for one turn.`);
+      return playersState;
+    }
+
+    if (tile.type === "gotojail") {
+      p.position = JAIL_INDEX;
+      p.inJail = true;
+      p.jailTurns = 1;
+      playersState[playerIndex] = p;
+      pushLog(`${p.name} got VAC reviewed and sent to cooldown.`);
+      playBeep("bad");
+      return playersState;
+    }
+
+    if (tile.type === "case") {
+      const card = caseCards[rand(0, caseCards.length - 1)];
+      pushLog(`${p.name}: ${card.text}`);
+      if (card.type === "cash") {
+        p.cash += card.amount;
+        playersState[playerIndex] = p;
+        playBeep(card.amount >= 0 ? "cash" : "bad");
+      } else if (card.type === "move") {
+        playersState[playerIndex] = p;
+        movePlayer(playersState, playerIndex, card.amount);
+        return applyLandEffect(playersState, playerIndex, playersState[playerIndex].position, false);
+      } else if (card.type === "skin") {
+        const skin = grantSkin();
+        p.skins = [...p.skins, skin];
+        playersState[playerIndex] = p;
+        pushLog(`${p.name} received ${skin.name} worth $${skin.value}.`);
+        playBeep("cash");
+      } else if (card.type === "nearestRail") {
+        p.position = nearestTileIndex(p.position, "rail");
+        playersState[playerIndex] = p;
+        return applyLandEffect(playersState, playerIndex, p.position, true);
+      }
+      return playersState;
+    }
+
+    if (["property", "rail", "utility"].includes(tile.type)) {
+      if (!ownerInfo) {
+        if (forceBuy && p.cash >= tile.price) {
+          p.cash -= tile.price;
+          p.properties = [...p.properties, { tileId: tile.id, houses: 0 }];
+          playersState[playerIndex] = p;
+          pushLog(`${p.name} bought ${tile.name} for $${tile.price}.`);
+          playBeep("buy");
+        } else {
+          playersState[playerIndex] = p;
+        }
+      } else if (ownerInfo.playerId !== p.id) {
+        const ownerIndex = playersState.findIndex((x) => x.id === ownerInfo.playerId);
+        const ownerPlayer = playersState[ownerIndex];
+        const rent = calcRent(tile, ownerPlayer, playersState, ownerInfo.houses || 0);
+        p.cash -= rent;
+        playersState[ownerIndex] = { ...ownerPlayer, cash: ownerPlayer.cash + rent };
+        playersState[playerIndex] = p;
+        pushLog(`${p.name} paid $${rent} to ${ownerPlayer.name} on ${tile.name}.`);
+        playBeep("bad");
+      } else {
+        playersState[playerIndex] = p;
+      }
+    }
+
+    return playersState;
+  }
+
+  function runTurn(index = turn) {
+    if (gameOver) return;
+    const actor = players[index];
+    if (!actor || actor.eliminated) return;
+
+    const nextState = players.map((p) => ({ ...p, properties: p.properties.map((pp) => ({ ...pp })), skins: p.skins.map((s) => ({ ...s })) }));
+    const player = { ...nextState[index] };
+
+    if (player.inJail) {
+      player.inJail = false;
+      player.jailTurns = 0;
+      nextState[index] = player;
+      setAndCheck(nextState);
+      pushLog(`${player.name} served cooldown and is back in the server.`);
+      nextTurn(index, nextState);
+      return;
+    }
+
+    const [d1, d2] = rollDice();
+    setLastRoll([d1, d2]);
+    playBeep("move");
+    pushLog(`${player.name} rolled ${d1} + ${d2}.`);
+    movePlayer(nextState, index, d1 + d2);
+    applyLandEffect(nextState, index, nextState[index].position, true);
+
+    if (nextState[index].isBot) {
+      attemptBotUpgrade(index, nextState);
+      attemptBotMarket(index, nextState);
+      maybeBotTrade(index, nextState);
+    }
+
+    setAndCheck(nextState);
+    const doubles = d1 === d2;
+    if (doubles && !nextState[index].eliminated) {
+      pushLog(`${nextState[index].name} rolled doubles and keeps the turn.`);
+      setTurn(index);
+    } else {
+      nextTurn(index, nextState);
+    }
+  }
+
+  function playerRoll() {
+    if (currentPlayer?.isBot || gameOver) return;
+    runTurn(turn);
+  }
+
+  function ownedTile(player, tileId) {
+    return player.properties.find((p) => p.tileId === tileId);
+  }
+
+  function canUpgrade(player, tileId) {
+    const tile = board[tileId];
+    if (!tile?.set) return false;
+    return getSetCount(player, tile.set) === setTotals[tile.set];
+  }
+
+  function upgradeTile(tileId, actorIndex = turn, sourcePlayers = players) {
+    const nextState = sourcePlayers.map((p) => ({ ...p, properties: p.properties.map((pp) => ({ ...pp })), skins: p.skins.map((s) => ({ ...s })) }));
+    const player = nextState[actorIndex];
+    const tile = board[tileId];
+    const owned = ownedTile(player, tileId);
+    if (!tile || !owned || !tile.houseCost) return;
+    if (!canUpgrade(player, tileId)) {
+      pushLog(`Need the full ${tile.set} set before upgrading ${tile.name}.`);
+      return;
+    }
+    if (owned.houses >= 4) {
+      pushLog(`${tile.name} already has max upgrades.`);
+      return;
+    }
+    if (player.cash < tile.houseCost) {
+      pushLog(`${player.name} cannot afford to upgrade ${tile.name}.`);
+      return;
+    }
+    player.cash -= tile.houseCost;
+    player.properties = player.properties.map((p) => (p.tileId === tileId ? { ...p, houses: p.houses + 1 } : p));
+    nextState[actorIndex] = player;
+    setAndCheck(nextState);
+    pushLog(`${player.name} upgraded ${tile.name} for $${tile.houseCost}.`);
+    playBeep("buy");
+  }
+
+  function attemptBotUpgrade(index, nextState) {
+    const bot = nextState[index];
+    const upgradeables = bot.properties
+      .map((p) => ({ tileId: p.tileId, houses: p.houses, tile: board[p.tileId] }))
+      .filter((p) => p.tile.houseCost && p.houses < 4 && canUpgrade(bot, p.tileId) && bot.cash > p.tile.houseCost + 220);
+    if (upgradeables.length) {
+      const chosen = upgradeables[rand(0, upgradeables.length - 1)];
+      bot.cash -= chosen.tile.houseCost;
+      bot.properties = bot.properties.map((p) => (p.tileId === chosen.tileId ? { ...p, houses: p.houses + 1 } : p));
+      nextState[index] = bot;
+      pushLog(`${bot.name} upgraded ${chosen.tile.name}.`);
+    }
+  }
+
+  function buySkinFromMarket(index, skinId, sourcePlayers = players) {
+    const listing = marketListings.find((s) => s.id === skinId);
+    if (!listing) return;
+    const nextState = sourcePlayers.map((p) => ({ ...p, properties: p.properties.map((pp) => ({ ...pp })), skins: p.skins.map((s) => ({ ...s })) }));
+    const buyer = nextState[index];
+    if (buyer.cash < listing.value) return;
+    buyer.cash -= listing.value;
+    buyer.skins = [...buyer.skins, { ...listing }];
+    nextState[index] = buyer;
+    setAndCheck(nextState);
+    pushLog(`${buyer.name} bought ${listing.name} for $${listing.value} from the market.`);
+    playBeep("buy");
+  }
+
+  const marketListings = useMemo(() => {
+    const picks = [];
+    for (let i = 0; i < 5; i += 1) picks.push({ ...skinPool[(i * 2 + 1) % skinPool.length], id: `market-${i}-${skinPool[(i * 2 + 1) % skinPool.length].name}` });
+    return picks;
+  }, []);
+
+  function attemptBotMarket(index, nextState) {
+    if (!marketOpen) return;
+    const bot = nextState[index];
+    if (bot.cash < 300) return;
+    const choice = marketListings[rand(0, marketListings.length - 1)];
+    if (choice.value < bot.cash * 0.18) {
+      bot.cash -= choice.value;
+      bot.skins = [...bot.skins, { ...choice, id: crypto.randomUUID() }];
+      nextState[index] = bot;
+      pushLog(`${bot.name} grabbed ${choice.name} from the market.`);
+    }
+  }
+
+  function maybeBotTrade(index, nextState) {
+    const bot = nextState[index];
+    if (Math.random() > 0.35) return;
+    const target = nextState.find((p) => p.id !== bot.id && !p.eliminated);
+    if (!target) return;
+    const wanted = target.properties.find((prop) => board[prop.tileId]?.set && getSetCount(target, board[prop.tileId].set) < setTotals[board[prop.tileId].set]);
+    const give = bot.properties.find((prop) => board[prop.tileId]?.price && board[prop.tileId].price <= 200);
+    if (!wanted || !give) return;
+    const offer = createTradeOffer(bot.id, target.id, 80, 0, [give.tileId], [wanted.tileId], [], []);
+    setTrades((prev) => [offer, ...prev].slice(0, 8));
+    pushLog(`${bot.name} posted a trade offer to ${target.name}.`);
+  }
+
+  useEffect(() => {
+    if (!currentPlayer || gameOver) return;
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (currentPlayer.isBot) {
+      timeoutRef.current = setTimeout(() => runTurn(turn), BOT_ACTION_DELAY);
+    }
+    return () => timeoutRef.current && clearTimeout(timeoutRef.current);
+  }, [turn, currentPlayer, gameOver]);
+
+  function resetGame() {
+    setPlayers(defaultPlayers.map((p) => ({ ...p, properties: [], skins: [] })));
+    setTurn(0);
+    setSelectedTile(0);
+    setLog(["New CS2 match loaded. Economy reset."]);
+    setLastRoll([1, 1]);
+    setTrades([]);
+    setGameOver(false);
+  }
+
+  function joinBotLobby() {
+    const codes = ["MIRAGE-2V2", "MAJOR-FINAL", "PREMIER-10", "RICHUP-CS2"];
+    const rooms = ["Mirage Scrim", "Major Finals", "Premier Queue", "Trade-Up Lab"];
+    setLobbyCode(codes[rand(0, codes.length - 1)]);
+    setRoomName(rooms[rand(0, rooms.length - 1)]);
+    pushLog(`Joined lobby ${roomName} (${lobbyCode}).`);
+  }
+
+  function toggleTileSelection(listSetter, list, value) {
+    listSetter(list.includes(value) ? list.filter((x) => x !== value) : [...list, value]);
+  }
+
+  function toggleSkinSelection(listSetter, list, value) {
+    listSetter(list.includes(value) ? list.filter((x) => x !== value) : [...list, value]);
+  }
+
+  function submitTrade() {
+    const from = currentPlayer;
+    const to = players.find((p) => p.id === tradeTarget);
+    if (!from || !to || from.id === to.id) return;
+    const offer = createTradeOffer(
+      from.id,
+      to.id,
+      tradeCashOffered,
+      tradeCashRequested,
+      selectedOfferTiles,
+      selectedRequestTiles,
+      selectedOfferSkins,
+      selectedRequestSkins
+    );
+    setTrades((prev) => [offer, ...prev].slice(0, 10));
+    setSelectedOfferTiles([]);
+    setSelectedRequestTiles([]);
+    setSelectedOfferSkins([]);
+    setSelectedRequestSkins([]);
+    setTradeCashOffered(0);
+    setTradeCashRequested(0);
+    pushLog(`${from.name} sent a trade offer to ${to.name}.`);
+  }
+
+  function acceptTrade(offer) {
+    const nextState = players.map((p) => ({ ...p, properties: p.properties.map((pp) => ({ ...pp })), skins: p.skins.map((s) => ({ ...s })) }));
+    const fromIdx = nextState.findIndex((p) => p.id === offer.from);
+    const toIdx = nextState.findIndex((p) => p.id === offer.to);
+    if (fromIdx === -1 || toIdx === -1) return;
+    const from = nextState[fromIdx];
+    const to = nextState[toIdx];
+    if (from.cash < offer.fromCash || to.cash < offer.toCash) return;
+
+    from.cash -= offer.fromCash;
+    to.cash += offer.fromCash;
+    to.cash -= offer.toCash;
+    from.cash += offer.toCash;
+
+    from.properties = from.properties.filter((p) => !offer.fromTileIds.includes(p.tileId));
+    to.properties = to.properties.filter((p) => !offer.toTileIds.includes(p.tileId));
+    from.properties = [...from.properties, ...to.properties.filter((p) => offer.toTileIds.includes(p.tileId))];
+    to.properties = [...to.properties, ...players[fromIdx].properties.filter((p) => offer.fromTileIds.includes(p.tileId))];
+
+    const fromSkinObjs = from.skins.filter((s) => offer.fromSkins.includes(s.id));
+    const toSkinObjs = to.skins.filter((s) => offer.toSkins.includes(s.id));
+    from.skins = from.skins.filter((s) => !offer.fromSkins.includes(s.id));
+    to.skins = to.skins.filter((s) => !offer.toSkins.includes(s.id));
+    from.skins = [...from.skins, ...toSkinObjs];
+    to.skins = [...to.skins, ...fromSkinObjs];
+
+    nextState[fromIdx] = from;
+    nextState[toIdx] = to;
+    setAndCheck(nextState);
+    setTrades((prev) => prev.filter((t) => t.id !== offer.id));
+    pushLog(`${getPlayer(players, offer.to)?.name} accepted a trade from ${getPlayer(players, offer.from)?.name}.`);
+    playBeep("cash");
+  }
+
+  function declineTrade(id) {
+    setTrades((prev) => prev.filter((t) => t.id !== id));
+  }
+
+  const myProps = currentPlayer?.properties || [];
+  const mySkins = currentPlayer?.skins || [];
+  const tradePartner = players.find((p) => p.id === tradeTarget);
+  const partnerProps = tradePartner?.properties || [];
+  const partnerSkins = tradePartner?.skins || [];
+
+  return (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.12),_transparent_25%),linear-gradient(135deg,#09090b,#111827,#020617)] text-white p-4 md:p-6">
+      <div className="mx-auto max-w-7xl space-y-6">
+        <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="rounded-[28px] border border-white/10 bg-black/30 p-5 backdrop-blur-xl shadow-2xl shadow-black/30">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="flex items-center gap-2 text-cyan-300 text-sm font-medium">
+                  <Crown className="h-4 w-4" /> CS2 Economy Empire
                 </div>
+                <h1 className="text-3xl md:text-5xl font-black tracking-tight mt-2">Richup-style Monopoly, but Counter-Strike themed</h1>
+                <p className="text-zinc-300 mt-3 max-w-3xl">
+                  Full browser game concept with a classic edge board, bot lobby, trading, skin inventory, market, audio beeps, upgrades, rent, drops, and Major-style presentation.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={playerRoll} disabled={currentPlayer?.isBot || gameOver} className="rounded-2xl bg-orange-500 px-5 py-6 text-black font-bold hover:bg-orange-400">
+                  <RotateCw className="mr-2 h-4 w-4" /> Roll Turn
+                </Button>
+                <Button onClick={resetGame} variant="secondary" className="rounded-2xl px-5 py-6 font-bold">
+                  New Match
+                </Button>
+              </div>
             </div>
-            <div id="playerSetups"></div>
-            <button class="btn btn-primary glow" onclick="startGame()">⚡ START MATCH</button>
+          </div>
+
+          <div className="rounded-[28px] border border-white/10 bg-black/30 p-5 backdrop-blur-xl shadow-2xl shadow-black/30">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-zinc-400 text-sm">Lobby</div>
+                <div className="text-2xl font-black">{roomName}</div>
+                <div className="text-cyan-300 text-sm">Code: {lobbyCode}</div>
+              </div>
+              <div className="flex gap-2">
+                <Button onClick={joinBotLobby} variant="secondary" className="rounded-2xl"><Users className="mr-2 h-4 w-4" /> Shuffle Lobby</Button>
+                <Button onClick={() => setSoundOn((s) => !s)} variant="secondary" className="rounded-2xl">
+                  {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="text-xs text-zinc-400 mb-2">SFX Volume</div>
+              <Slider value={volume} onValueChange={setVolume} max={100} step={1} />
+            </div>
+          </div>
         </div>
-    </main>
-</div>
 
-<!-- ========== GAME SCREEN ========== -->
-<div id="gameScreen" class="hidden">
-    <!-- HUD -->
-    <div class="game-hud">
-        <div class="hud-left"><span class="hud-logo">CS2 BOARD</span></div>
-        <div class="hud-center" id="turnBanner"></div>
-        <div class="hud-right">
-            <button class="btn-small" onclick="if(confirm('Quit match?'))location.reload()">✕</button>
-        </div>
-    </div>
+        <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+          <Card className="rounded-[28px] border-white/10 bg-black/30 backdrop-blur-xl overflow-hidden">
+            <CardHeader className="pb-2">
+              <CardTitle className="flex items-center justify-between text-2xl">
+                <span>Game Board</span>
+                <div className="flex items-center gap-3 text-zinc-300">
+                  <DiceA className="h-5 w-5" />
+                  <DiceB className="h-5 w-5" />
+                  <span>{lastRoll[0] + lastRoll[1]}</span>
+                </div>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-10 gap-1 rounded-[28px] bg-zinc-950/70 p-2 border border-white/5">
+                {Array.from({ length: 100 }).map((_, gridIndex) => {
+                  const row = Math.floor(gridIndex / 10);
+                  const col = gridIndex % 10;
+                  const tileIndex = boardCoords.findIndex((c) => c.row === row && c.col === col);
+                  if (tileIndex === -1) {
+                    if (row > 1 && row < 8 && col > 1 && col < 8) {
+                      const centerContent = row === 4 && col === 4;
+                      return (
+                        <div key={gridIndex} className="aspect-square rounded-2xl bg-gradient-to-br from-zinc-900/80 to-zinc-950 border border-white/5 flex items-center justify-center text-center p-2">
+                          {centerContent ? (
+                            <div>
+                              <div className="text-xl md:text-3xl font-black text-orange-400">CS2</div>
+                              <div className="text-[10px] md:text-xs text-zinc-400">Economy Empire</div>
+                            </div>
+                          ) : null}
+                        </div>
+                      );
+                    }
+                    return <div key={gridIndex} className="aspect-square rounded-2xl bg-transparent" />;
+                  }
+                  const tile = board[tileIndex];
+                  const owner = owners[tile.id];
+                  const ownerPlayer = owner ? getPlayer(players, owner.playerId) : null;
+                  const here = players.filter((p) => !p.eliminated && p.position === tile.id);
+                  return (
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      key={tile.id}
+                      onClick={() => setSelectedTile(tile.id)}
+                      className={`aspect-square rounded-2xl border ${selectedTile === tile.id ? "border-white" : "border-white/10"} bg-zinc-900/95 p-1.5 text-left relative overflow-hidden`}
+                    >
+                      <div className={`absolute inset-x-0 top-0 h-2 bg-gradient-to-r ${tile.color}`} />
+                      <div className="mt-2 text-[9px] uppercase tracking-wide text-zinc-400">{prettyTileType(tile.type)}</div>
+                      <div className="text-[10px] md:text-[11px] font-bold leading-tight mt-1">{tile.name}</div>
+                      {tile.price ? <div className="text-[10px] text-cyan-300 mt-1">${tile.price}</div> : null}
+                      {ownerPlayer ? <div className="text-[9px] text-zinc-300 mt-1 truncate">{ownerPlayer.name}</div> : null}
+                      <div className="absolute bottom-1 left-1 right-1 flex flex-wrap gap-1">
+                        {here.map((p) => (
+                          <span key={p.id} className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[8px] font-black text-black ${p.color}`}>{p.badge}</span>
+                        ))}
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
 
-    <div class="game-layout">
-        <!-- Players sidebar -->
-        <div class="sidebar" id="playerPanel"></div>
+          <div className="space-y-6">
+            <Card className="rounded-[28px] border-white/10 bg-black/30 backdrop-blur-xl">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl"><Shield className="h-5 w-5 text-cyan-300" /> Current Turn</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="rounded-2xl bg-zinc-950/80 border border-white/5 p-4 flex items-center justify-between">
+                  <div>
+                    <div className="text-2xl font-black">{currentPlayer?.name}</div>
+                    <div className="text-zinc-400 text-sm">{currentPlayer?.isBot ? "Bot" : "Human"} · Badge {currentPlayer?.badge}</div>
+                  </div>
+                  <div className={`h-12 w-12 rounded-2xl ${currentPlayer?.color}`} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-2xl bg-zinc-950/80 border border-white/5 p-4">
+                    <div className="text-xs text-zinc-400">Cash</div>
+                    <div className="text-2xl font-black text-emerald-400">${currentPlayer?.cash}</div>
+                  </div>
+                  <div className="rounded-2xl bg-zinc-950/80 border border-white/5 p-4">
+                    <div className="text-xs text-zinc-400">Net Worth</div>
+                    <div className="text-2xl font-black">${currentPlayer ? getNetWorth(currentPlayer) : 0}</div>
+                  </div>
+                </div>
+                {winner ? (
+                  <div className="rounded-2xl border border-amber-400/30 bg-amber-500/10 p-4 text-amber-300 flex items-center gap-2 font-semibold">
+                    <Trophy className="h-5 w-5" /> {winner.name} wins the Major final.
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
 
-        <!-- Board -->
-        <div class="board-area">
-            <div class="board" id="board">
-                <!-- 40 cells rendered by JS -->
-                <div class="board-center">
-                    <div class="center-title glitch" data-text="CS2">CS2</div>
-                    <div class="center-sub">BOARD</div>
-                    <div class="dice-box" id="diceBox">
-                        <span class="die" id="d1">⚀</span>
-                        <span class="die" id="d2">⚀</span>
+            <Card className="rounded-[28px] border-white/10 bg-black/30 backdrop-blur-xl">
+              <CardHeader><CardTitle className="text-xl">Selected Space</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                <div className="rounded-2xl bg-zinc-950/80 border border-white/5 p-4">
+                  <div className={`h-2 rounded-full bg-gradient-to-r ${currentTile.color}`} />
+                  <div className="mt-3 text-xs uppercase tracking-wide text-zinc-400">{prettyTileType(currentTile.type)}</div>
+                  <div className="text-2xl font-black mt-1">{currentTile.name}</div>
+                  {currentTile.subtitle ? <div className="text-sm text-zinc-400 mt-1">{currentTile.subtitle}</div> : null}
+                  {currentTile.price ? <div className="text-sm text-cyan-300 mt-2">Price: ${currentTile.price}</div> : null}
+                  {currentTile.rent ? <div className="text-sm text-zinc-300">Rent: ${currentTile.rent}</div> : null}
+                  {currentTile.houseCost ? <div className="text-sm text-zinc-300">Upgrade: ${currentTile.houseCost}</div> : null}
+                  {owners[currentTile.id] ? <div className="text-sm text-zinc-300">Owner: {getPlayer(players, owners[currentTile.id].playerId)?.name}</div> : <div className="text-sm text-zinc-400">Unowned</div>}
+                  {ownedTile(currentPlayer, currentTile.id) && currentTile.houseCost ? (
+                    <Button onClick={() => upgradeTile(currentTile.id)} className="mt-3 w-full rounded-2xl bg-emerald-600 hover:bg-emerald-500">
+                      <House className="mr-2 h-4 w-4" /> Upgrade This Tile
+                    </Button>
+                  ) : null}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="rounded-[28px] border-white/10 bg-black/30 backdrop-blur-xl">
+              <CardHeader><CardTitle className="text-xl">Standings</CardTitle></CardHeader>
+              <CardContent className="space-y-3">
+                {players.map((p) => {
+                  const worth = getNetWorth(p);
+                  return (
+                    <div key={p.id} className="rounded-2xl bg-zinc-950/80 border border-white/5 p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className={`h-4 w-4 rounded-full ${p.color}`} />
+                          <span className="font-semibold">{p.name}</span>
+                          {p.eliminated ? <Badge className="bg-rose-700">Out</Badge> : null}
+                        </div>
+                        <span className="text-zinc-300 text-sm">${worth}</span>
+                      </div>
+                      <Progress value={Math.min(100, worth / 40)} className="h-2 mt-2" />
+                      <div className="mt-2 flex items-center justify-between text-xs text-zinc-400">
+                        <span>{p.properties.length} props · {p.skins.length} skins</span>
+                        <span>Tile {p.position}</span>
+                      </div>
                     </div>
-                    <div id="rollTotal" class="roll-total"></div>
-                    <button id="rollBtn" class="btn btn-primary roll-btn glow" onclick="rollDice()">🎲 ROLL</button>
-                    <div id="actionBtns" class="action-btns"></div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-3">
+          <Card className="rounded-[28px] border-white/10 bg-black/30 backdrop-blur-xl">
+            <CardHeader><CardTitle className="flex items-center gap-2 text-xl"><Package className="h-5 w-5 text-fuchsia-300" /> Inventory & Skin Market</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-zinc-400">Market Status</div>
+                <Button variant="secondary" className="rounded-2xl" onClick={() => setMarketOpen((v) => !v)}>{marketOpen ? "Close" : "Open"} Market</Button>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button variant={buyInSkinsOnly ? "secondary" : "default"} className="rounded-2xl" onClick={() => setBuyInSkinsOnly((v) => !v)}>
+                  <ShoppingBag className="mr-2 h-4 w-4" /> {buyInSkinsOnly ? "Skins-only HUD" : "Show All HUD"}
+                </Button>
+              </div>
+              <div className="grid gap-2">
+                {marketListings.map((skin) => (
+                  <div key={skin.id} className="rounded-2xl border border-white/5 bg-zinc-950/80 p-3 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="font-semibold text-sm">{skin.name}</div>
+                      <div className="text-xs text-zinc-400">{skin.rarity}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-zinc-800">${skin.value}</Badge>
+                      <Button disabled={!marketOpen || currentPlayer?.isBot || currentPlayer?.cash < skin.value} onClick={() => buySkinFromMarket(turn, skin.id)} className="rounded-2xl">Buy</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <div className="text-sm font-semibold mb-2">Your Inventory</div>
+                <div className="grid gap-2 max-h-56 overflow-auto pr-1">
+                  {mySkins.length ? mySkins.map((skin) => (
+                    <div key={skin.id} className="rounded-2xl border border-white/5 bg-zinc-950/80 p-3 flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-medium">{skin.name}</div>
+                        <div className="text-xs text-zinc-400">{skin.rarity}</div>
+                      </div>
+                      <Badge className="bg-zinc-800">${skin.value}</Badge>
+                    </div>
+                  )) : <div className="text-sm text-zinc-500">No skins yet.</div>}
                 </div>
-            </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[28px] border-white/10 bg-black/30 backdrop-blur-xl">
+            <CardHeader><CardTitle className="flex items-center gap-2 text-xl"><ArrowRightLeft className="h-5 w-5 text-emerald-300" /> Trading Desk</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <div className="text-xs text-zinc-400 mb-2">Trade with</div>
+                  <div className="grid gap-2">
+                    {players.filter((p) => p.id !== currentPlayer.id && !p.eliminated).map((p) => (
+                      <button key={p.id} onClick={() => setTradeTarget(p.id)} className={`rounded-2xl border p-3 text-left ${tradeTarget === p.id ? "border-cyan-400 bg-cyan-500/10" : "border-white/10 bg-zinc-950/70"}`}>
+                        <div className="font-semibold">{p.name}</div>
+                        <div className="text-xs text-zinc-400">${p.cash} cash · {p.properties.length} props · {p.skins.length} skins</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <div className="text-xs text-zinc-400 mb-2">Cash you offer</div>
+                    <Input type="number" value={tradeCashOffered} onChange={(e) => setTradeCashOffered(Number(e.target.value || 0))} />
+                  </div>
+                  <div>
+                    <div className="text-xs text-zinc-400 mb-2">Cash you request</div>
+                    <Input type="number" value={tradeCashRequested} onChange={(e) => setTradeCashRequested(Number(e.target.value || 0))} />
+                  </div>
+                </div>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <div className="text-sm font-semibold mb-2">Your Properties</div>
+                  <div className="grid gap-2 max-h-36 overflow-auto pr-1">
+                    {myProps.map((prop) => (
+                      <button key={prop.tileId} onClick={() => toggleTileSelection(setSelectedOfferTiles, selectedOfferTiles, prop.tileId)} className={`rounded-2xl border p-2 text-left ${selectedOfferTiles.includes(prop.tileId) ? "border-emerald-400 bg-emerald-500/10" : "border-white/10 bg-zinc-950/70"}`}>
+                        <div className="text-sm">{board[prop.tileId].name}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm font-semibold mb-2">Requested Properties</div>
+                  <div className="grid gap-2 max-h-36 overflow-auto pr-1">
+                    {partnerProps.map((prop) => (
+                      <button key={prop.tileId} onClick={() => toggleTileSelection(setSelectedRequestTiles, selectedRequestTiles, prop.tileId)} className={`rounded-2xl border p-2 text-left ${selectedRequestTiles.includes(prop.tileId) ? "border-cyan-400 bg-cyan-500/10" : "border-white/10 bg-zinc-950/70"}`}>
+                        <div className="text-sm">{board[prop.tileId].name}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div>
+                  <div className="text-sm font-semibold mb-2">Your Skins</div>
+                  <div className="grid gap-2 max-h-32 overflow-auto pr-1">
+                    {mySkins.map((skin) => (
+                      <button key={skin.id} onClick={() => toggleSkinSelection(setSelectedOfferSkins, selectedOfferSkins, skin.id)} className={`rounded-2xl border p-2 text-left ${selectedOfferSkins.includes(skin.id) ? "border-emerald-400 bg-emerald-500/10" : "border-white/10 bg-zinc-950/70"}`}>
+                        <div className="text-sm">{skin.name}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-sm font-semibold mb-2">Requested Skins</div>
+                  <div className="grid gap-2 max-h-32 overflow-auto pr-1">
+                    {partnerSkins.map((skin) => (
+                      <button key={skin.id} onClick={() => toggleSkinSelection(setSelectedRequestSkins, selectedRequestSkins, skin.id)} className={`rounded-2xl border p-2 text-left ${selectedRequestSkins.includes(skin.id) ? "border-cyan-400 bg-cyan-500/10" : "border-white/10 bg-zinc-950/70"}`}>
+                        <div className="text-sm">{skin.name}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <Button onClick={submitTrade} disabled={currentPlayer?.isBot} className="w-full rounded-2xl bg-emerald-600 hover:bg-emerald-500 font-bold">Send Trade Offer</Button>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[28px] border-white/10 bg-black/30 backdrop-blur-xl">
+            <CardHeader><CardTitle className="flex items-center gap-2 text-xl"><Radio className="h-5 w-5 text-orange-300" /> Feed, Offers & Features</CardTitle></CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-2xl bg-zinc-950/80 border border-white/5 p-4">
+                <div className="flex items-center gap-2 text-sm text-zinc-300"><Sparkles className="h-4 w-4 text-amber-300" /> Included upgrades</div>
+                <div className="mt-2 text-sm text-zinc-400 space-y-1">
+                  <div>• Edge-layout board closer to classic Monopoly</div>
+                  <div>• Bot lobby simulation and auto turns</div>
+                  <div>• Skin inventory and market system</div>
+                  <div>• Trade offers with cash, properties, and skins</div>
+                  <div>• Basic CS2 style sound effects</div>
+                </div>
+              </div>
+              <div className="space-y-2 max-h-44 overflow-auto pr-1">
+                <AnimatePresence>
+                  {trades.map((offer) => {
+                    const from = getPlayer(players, offer.from);
+                    const to = getPlayer(players, offer.to);
+                    return (
+                      <motion.div key={offer.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="rounded-2xl bg-zinc-950/80 border border-white/5 p-3">
+                        <div className="text-sm font-semibold">{from?.name} → {to?.name}</div>
+                        <div className="text-xs text-zinc-400 mt-1">Offer ${offer.fromCash} + {offer.fromTileIds.length} props + {offer.fromSkins.length} skins for ${offer.toCash} + {offer.toTileIds.length} props + {offer.toSkins.length} skins</div>
+                        {offer.to === currentPlayer.id ? (
+                          <div className="mt-2 flex gap-2">
+                            <Button onClick={() => acceptTrade(offer)} className="rounded-2xl bg-emerald-600 hover:bg-emerald-500">Accept</Button>
+                            <Button onClick={() => declineTrade(offer.id)} variant="secondary" className="rounded-2xl">Decline</Button>
+                          </div>
+                        ) : null}
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+                {!trades.length ? <div className="text-sm text-zinc-500">No active trade offers.</div> : null}
+              </div>
+              <div className="space-y-2 max-h-56 overflow-auto pr-1">
+                {log.map((entry, i) => (
+                  <div key={i} className="rounded-2xl border border-white/5 bg-zinc-950/80 p-3 text-sm text-zinc-300 flex items-start gap-2">
+                    <Zap className="h-4 w-4 mt-0.5 text-orange-400 shrink-0" />
+                    <span>{entry}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        <!-- Log sidebar -->
-        <div class="sidebar log-sidebar">
-            <div class="glass-panel log-panel">
-                <h3>📋 Match Log</h3>
-                <div id="gameLog" class="log-entries"></div>
-            </div>
-        </div>
+        {!buyInSkinsOnly ? (
+          <div className="grid gap-4 md:grid-cols-4">
+            <Card className="rounded-[28px] border-white/10 bg-black/30 backdrop-blur-xl"><CardContent className="p-5"><div className="flex items-center gap-2 text-zinc-300"><Coins className="h-4 w-4" /> Economy</div><p className="text-sm text-zinc-400 mt-2">Pass spawn for cash, buy map control, and pressure opponents with expensive landing spots.</p></CardContent></Card>
+            <Card className="rounded-[28px] border-white/10 bg-black/30 backdrop-blur-xl"><CardContent className="p-5"><div className="flex items-center gap-2 text-zinc-300"><Swords className="h-4 w-4" /> Trade Meta</div><p className="text-sm text-zinc-400 mt-2">Swap tiles, skins, and money to complete map color sets faster than the bots.</p></CardContent></Card>
+            <Card className="rounded-[28px] border-white/10 bg-black/30 backdrop-blur-xl"><CardContent className="p-5"><div className="flex items-center gap-2 text-zinc-300"><Lock className="h-4 w-4" /> Cooldown</div><p className="text-sm text-zinc-400 mt-2">VAC review and cooldown spaces create tempo swings, just like losing control of economy in CS2.</p></CardContent></Card>
+            <Card className="rounded-[28px] border-white/10 bg-black/30 backdrop-blur-xl"><CardContent className="p-5"><div className="flex items-center gap-2 text-zinc-300"><Package className="h-4 w-4" /> Cosmetic Layer</div><p className="text-sm text-zinc-400 mt-2">Use skins as collectible assets and trade chips to add a CS market vibe to the board game.</p></CardContent></Card>
+          </div>
+        ) : null}
+      </div>
     </div>
-</div>
-
-<!-- Property popup -->
-<div id="propModal" class="modal hidden">
-    <div class="glass-panel modal-content" id="propModalBody"></div>
-</div>
-
-<!-- Card popup (Loot / Supply) -->
-<div id="cardModal" class="modal hidden">
-    <div class="glass-panel modal-content card-popup">
-        <div id="cardBody"></div>
-        <button class="btn btn-primary" onclick="closeCard()">OK</button>
-    </div>
-</div>
-
-<!-- Winner overlay -->
-<div id="winOverlay" class="modal hidden">
-    <div class="glass-panel modal-content winner-box">
-        <h2 class="neon-text gold">🏆 ACE! 🏆</h2>
-        <p id="winMsg"></p>
-        <button class="btn btn-primary" onclick="location.reload()">Play Again</button>
-    </div>
-</div>
-
-<script src="js/data.js"></script>
-<script src="js/game.js"></script>
+  );
+}
